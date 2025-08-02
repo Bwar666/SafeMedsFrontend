@@ -1,29 +1,26 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import {SplashScreen, Stack} from "expo-router";
+import "./global.css"
+import { useFonts  } from "expo-font";
+import {useEffect, useState} from "react";
+import {error} from "@expo/fingerprint/cli/build/utils/log";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const [fontsLoaded] = useFonts({
+    'Lato-Black': require('./assets/fonts/Lato/Lato-Black.ttf'),
+    'Lato-Bold': require('./assets/fonts/Lato/Lato-Bold.ttf'),
+    'Lato-Light': require('./assets/fonts/Lato/Lato-Light.ttf'),
+    'Lato-Regular': require('./assets/fonts/Lato/Lato-Regular.ttf'),
+    'Lato-Thin': require('./assets/fonts/Lato/Lato-Thin.ttf'),
+    'Merriweather-Light': require('./assets/fonts/Merriweather/Merriweather-Light.ttf'),
+    'Merriweather-Medium': require('./assets/fonts/Merriweather/Merriweather-Medium.ttf'),
+    'Merriweather-Regular': require('./assets/fonts/Merriweather/Merriweather-Regular.ttf'),
+    'Merriweather-SemiBold': require('./assets/fonts/Merriweather/Merriweather-SemiBold.ttf'),
   });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+  useEffect(() => {
+    if(error) throw error;
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+  return <Stack screenOptions={{headerShown: false}}/>;
 }
