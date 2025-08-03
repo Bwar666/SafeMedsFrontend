@@ -76,9 +76,16 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         }
     };
 
-    // Translation function with proper typing and fallback
+    // Fixed translation function with proper type safety
     const t = (key: TranslationKeys): string => {
-        return translations[currentLanguage][key] || translations.en[key] || key;
+        // Get the current language translations
+        const currentTranslations = translations[currentLanguage];
+
+        // Type assertion to ensure we can access the key
+        const currentValue = (currentTranslations as Record<TranslationKeys, string>)[key];
+        const fallbackValue = (translations.en as Record<TranslationKeys, string>)[key];
+
+        return currentValue || fallbackValue || key;
     };
 
     const value: LanguageContextValue = {

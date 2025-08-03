@@ -9,25 +9,24 @@ import {
     NativeSyntheticEvent,
     NativeScrollEvent,
 } from 'react-native';
+import { StackScreenProps } from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { IconButton, PrimaryButton, LanguageDropdown, PageIndicator } from '../components';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-interface OnboardingScreenProps {
-    onComplete: () => void;
-}
+type OnboardingScreenProps = StackScreenProps<RootStackParamList, 'Onboarding'>;
 
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
     const { t, isRTL } = useLanguage();
     const { isDark, toggleTheme } = useTheme();
 
-    // Simple state management
     const [currentSlideIndex, setCurrentSlideIndex] = useState<number>(0);
     const scrollViewRef = useRef<ScrollView>(null);
 
-    // Slides data
     const slides = [
         { id: 1, title: t('onboarding1Title'), description: t('onboarding1Desc'), icon: '💊' },
         { id: 2, title: t('onboarding2Title'), description: t('onboarding2Desc'), icon: '⚠️' },
@@ -36,10 +35,19 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
 
     const isLastSlide = currentSlideIndex === slides.length - 1;
 
-    // Handlers
+    const completeOnboarding = useCallback(async (): Promise<void> => {
+        try {
+            await AsyncStorage.setItem('onboarding_completed', 'true');
+            navigation.navigate('ProfileCreation');
+        } catch (error) {
+            console.log('Error saving onboarding status:', error);
+            navigation.navigate('ProfileCreation');
+        }
+    }, [navigation]);
+
     const handleNextSlide = useCallback((): void => {
         if (isLastSlide) {
-            onComplete();
+            completeOnboarding();
         } else {
             const nextIndex = currentSlideIndex + 1;
             scrollViewRef.current?.scrollTo({
@@ -48,7 +56,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
             });
             setTimeout(() => setCurrentSlideIndex(nextIndex), 50);
         }
-    }, [currentSlideIndex, isLastSlide, onComplete]);
+    }, [currentSlideIndex, isLastSlide, completeOnboarding]);
 
     const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>): void => {
         const slideIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
@@ -65,7 +73,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
                     <IconButton icon={isDark ? '☀️' : '🌙'} onPress={toggleTheme} />
                     <LanguageDropdown />
                 </View>
-                <TouchableOpacity onPress={onComplete} className="px-4 py-3" activeOpacity={0.7}>
+                <TouchableOpacity onPress={completeOnboarding} className="px-4 py-3" activeOpacity={0.7}>
                     <Text className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>
                         {t('skip')}
                     </Text>
