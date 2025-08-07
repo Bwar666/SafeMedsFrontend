@@ -3,7 +3,7 @@ export const en = {
     welcome: 'Welcome to SafeMed',
     onboarding1Title: 'Track Your Medicines',
     onboarding1Desc: 'Never miss a dose with smart reminders and scheduling',
-    onboarding2Title: 'AI Health Warnings',
+    onboarding2Title: 'ai Health Warnings',
     onboarding2Desc: 'Get intelligent alerts about drug interactions and conflicts',
     onboarding3Title: 'Stay Healthy',
     onboarding3Desc: 'Monitor your medication history and health progress',
@@ -90,7 +90,7 @@ export const en = {
     yes: 'Yes',
     no: 'No',
 
-    // Medicine Management (for future use)
+    // Medicine Management
     medicines: 'Medicines',
     addMedicine: 'Add Medicine',
     medicineName: 'Medicine Name',
@@ -204,12 +204,9 @@ export const en = {
     // Units & Measurements
     mg: 'mg',
     ml: 'ml',
-    tablet: 'tablet',
     tablets: 'tablets',
-    capsule: 'capsule',
     capsules: 'capsules',
     drop: 'drop',
-    drops: 'drops',
 
     // Frequency
     daily: 'Daily',
@@ -230,4 +227,195 @@ export const en = {
     everySixHours: 'Every 6 hours',
     everyEightHours: 'Every 8 hours',
     everyTwelveHours: 'Every 12 hours',
+
+    // Navigation
+    warnings: 'Warnings',
+    aiWarnings: 'ai Warnings',
+
+    // Home Screen
+    goodMorning: 'Good Morning',
+    goodAfternoon: 'Good Afternoon',
+    goodEvening: 'Good Evening',
+    todayOverview: "Today's Overview",
+    totalMedicines: 'Total Medicines',
+    active: 'Active',
+    takenToday: 'Taken Today',
+    outOf: 'out of',
+    upcoming: 'Upcoming',
+    remaining: 'Remaining',
+    viewAll: 'View All',
+    quickActions: 'Quick Actions',
+    logMedicine: 'Log Medicine',
+    healthInsights: 'Health Insights',
+    adherenceRate: 'Adherence Rate',
+    adherenceImprovement: 'Great! You\'re improving your medication adherence.',
+
+    // Medicines Screen
+    searchMedicines: 'Search medicines...',
+    noMedicines: 'No medicines yet',
+    addFirstMedicineDesc: 'Add your first medicine to start tracking your health journey',
+
+    // ai Warnings Screen
+    aiProtection: 'ai Protection Active',
+    aiProtectionDesc: 'Monitoring your medicines for potential risks',
+    noWarnings: 'No warnings',
+    noWarningsDesc: 'Your medicines are safe and no warnings detected',
+
+    // Settings Modal
+    dangerZone: 'Danger Zone',
+    deleteAccountWarning: 'This action cannot be undone',
+
+    // Medicine Adding - Basic Steps
+    basicInformation: 'Basic Information',
+    condition: 'Condition',
+    medicineForm: 'Medicine Form',
+    duration: 'Duration',
+    foodInstruction: 'Food Instruction',
+    review: 'Review',
+
+    // Step descriptions
+    medicineNameDescription: 'Enter the name of your medicine',
+    conditionDescription: 'Tell us what this medicine is treating',
+    medicineFormDescription: 'What form is your medicine in?',
+    frequencyDescription: 'How often do you take this medicine?',
+    dosageDescription: 'When and how much do you take?',
+    durationDescription: 'How long will you take this medicine?',
+    foodInstructionsDescription: 'How should this medicine be taken with food?',
+    reviewDescription: 'Please review all details before adding',
+
+    // Medicine Search
+    searchMedicineName: 'Search for medicine name...',
+    searchCondition: 'Search for condition or symptom...',
+    medicineNameHint: 'Start typing to search for medicines',
+    conditionHint: 'Start typing to search for conditions',
+    selectedMedicine: 'Selected medicine',
+    medicineNameTip: 'Tip: You can search by brand name, generic name, or active ingredient',
+
+    // Condition Step
+    conditionReason: 'What condition is this for?',
+    commonConditions: 'Common Conditions',
+    treatingCondition: 'Treating this condition',
+    conditionTip: 'Tip: Be specific about your condition to get better medicine recommendations and warnings',
+
+    // Medicine Forms
+    pill: 'Pill',
+    capsule: 'Capsule',
+    tablet: 'Tablet',
+    injection: 'Injection',
+    liquid: 'Liquid',
+    drops: 'Drops',
+    inhaler: 'Inhaler',
+    powder: 'Powder',
+    patch: 'Patch',
+    gel: 'Gel',
+    spray: 'Spray',
+    selectedForm: 'Selected form',
+    formTip: 'Tip: The form affects how and when you should take your medicine',
+
+    // Frequency Types
+    everyOtherDay: 'Every Other Day',
+    specificDays: 'Specific Days',
+    everyXDays: 'Every X Days',
+    everyXWeeks: 'Every X Weeks',
+    everyXMonths: 'Every X Months',
+    cycleBased: 'Cycle Based',
+    selectDays: 'Select Days',
+    intervalDays: 'Every how many days?',
+    cycleConfig: 'Cycle Configuration',
+    frequencySummary: 'Frequency Summary',
+    frequencyTip: 'Tip: Choose the frequency that matches your doctor\'s prescription exactly',
+
+    // Days of Week
+    monday: 'Mon',
+    tuesday: 'Tue',
+    wednesday: 'Wed',
+    thursday: 'Thu',
+    friday: 'Fri',
+    saturday: 'Sat',
+    sunday: 'Sun',
+
+    // Dosage Step
+    dosageAndTiming: 'Dosage & Timing',
+    intakeSchedule: 'Intake Schedule',
+    addIntakeTime: 'Add Intake Time',
+    commonTimes: 'Common Times',
+    selectToUpdate: 'Select to update selected time',
+    dosageSummary: 'Dosage Summary',
+    dosageTip: 'Tip: Set exact times and amounts as prescribed by your doctor',
+    cannotRemove: 'Cannot Remove',
+    atLeastOneIntake: 'You must have at least one intake time.',
+    totalDailyAmount: 'Total daily amount',
+    intakeTimes: 'Intake Times',
+
+    // Duration Step
+    durationReminders: 'Duration & Reminders',
+    treatmentDuration: 'Treatment Duration',
+    refillReminder: 'Refill Reminder',
+    customDuration: 'Custom Duration',
+    customReminder: 'Custom Reminder',
+    remindMe: 'Remind me',
+    daysBefore: 'days before running out',
+    treatmentSummary: 'Treatment Summary',
+    endDate: 'Estimated end',
+    estimatedEndDate: 'Estimated end',
+    durationTip: 'Tip: Set the duration as prescribed. You can always extend or modify it later.',
+
+    // Duration Options
+    threeDays: '3 Days',
+    oneWeek: '1 Week',
+    twoWeeks: '2 Weeks',
+    oneMonth: '1 Month',
+    twoMonths: '2 Months',
+    threeMonths: '3 Months',
+    ongoing: 'Ongoing',
+    days: 'days',
+
+    // Reminder Options
+    threeDaysBefore: '3 days before',
+    fiveDaysBefore: '5 days before',
+    oneWeekBefore: '1 week before',
+    twoWeeksBefore: '2 weeks before',
+
+    // Food Instructions
+    foodInstructions: 'Food Instructions',
+    beforeEating: 'Before Eating',
+    whileEating: 'With Food',
+    afterEating: 'After Eating',
+    emptyStomach: 'Empty Stomach',
+    doesNotMatter: 'Anytime',
+    selectedInstruction: 'Selected Instruction',
+    importantNote: 'Important Note',
+    emptyStomachWarning: 'Taking on empty stomach may cause nausea. If you experience stomach upset, consult your doctor about taking with food.',
+    helpfulTips: 'Helpful Tips',
+    tip1: 'Always follow your doctor\'s specific instructions',
+    tip2: 'Some medicines work better with certain foods',
+    tip3: 'Taking with food can reduce stomach irritation',
+    tip4: 'Empty stomach means 1 hour before or 2 hours after eating',
+
+    // Review Step
+    reviewMedicine: 'Review Medicine',
+    for: 'For',
+    form: 'Form',
+    timesPerDay: 'Times per day',
+    importantReminders: 'Important Reminders',
+    reminder1: 'Always follow your doctor\'s instructions',
+    reminder2: 'Don\'t stop taking without consulting your doctor',
+    reminder3: 'Report any side effects immediately',
+    readyToAdd: 'Ready to add this medicine to your tracking',
+
+    // Form Validation & Errors
+    incompleteStep: 'Incomplete Step',
+    pleaseCompleteStep: 'Please complete all required fields before continuing.',
+    incompleteForm: 'Incomplete Form',
+    pleaseCompleteAllSteps: 'Please complete all required fields.',
+    medicineAddedSuccess: 'Medicine has been added successfully!',
+    medicineAddError: 'Failed to add medicine. Please try again.',
+    submitting: 'Submitting...',
+    userNotFound: 'User information not found. Please restart the app.',
+    userLoadError: 'Failed to load user information.',
+
+    // General Medicine Terms
+    takeWith: 'Take with',
+    dose: 'dose',
+    doses: 'doses',
 } as const;

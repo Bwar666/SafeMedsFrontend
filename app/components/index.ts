@@ -4,4 +4,4 @@ export { default as PrimaryButton } from './PrimaryButton';
 export { default as PageIndicator } from './PageIndicator';
 export { default as LanguageDropdown } from './LanguageDropdown';
 
-export { UserInfoForm, AllergyForm } from './forms';
+export { UserInfoForm, AllergyForm, BasicInfoForm, GenderBirthForm} from './forms';

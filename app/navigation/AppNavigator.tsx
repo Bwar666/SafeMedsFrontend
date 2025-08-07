@@ -4,16 +4,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
-import { UserStorageService } from '../services/userApi';
+import { UserStorageService } from '../services/user/UserService';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import ProfileCreationScreen from '../screens/ProfileCreationScreen';
-import HomeScreen from '../screens/HomeScreen';
+import MainTabNavigator from './MainTabNavigator';
+import AddMedicineScreen from "@/app/screens/AddMedicineScreen";
 
 // Navigation Types
 export type RootStackParamList = {
     Onboarding: undefined;
     ProfileCreation: undefined;
-    Home: undefined;
+    HomeTab: undefined; // Changed from Home to Main
+    AddMedicine: undefined;
 };
 
 type RouteKey = keyof RootStackParamList;
@@ -59,7 +61,7 @@ const AppNavigator: React.FC = () => {
         ]);
 
         if (hasCompletedOnboarding === 'true' && hasCreatedProfile && storedUser) {
-            return 'Home';
+            return 'HomeTab'; // Navigate to Main (Tab Navigator) instead of Home
         }
 
         if (hasCompletedOnboarding === 'true') {
@@ -91,14 +93,11 @@ const AppNavigator: React.FC = () => {
                 UserStorageService.clearUserData(),
             ]);
 
-            console.log('✅ App data reset complete');
-
             // Restart initialization
             setIsLoading(true);
             setInitialRoute(null);
             await initializeApp();
         } catch (error) {
-            console.error('❌ Error resetting app data:', error);
         }
     };
 
@@ -134,9 +133,17 @@ const AppNavigator: React.FC = () => {
                 options={{ gestureEnabled: true }}
             />
             <Stack.Screen
-                name="Home"
-                component={HomeScreen}
+                name="HomeTab"
+                component={MainTabNavigator}
                 options={{ gestureEnabled: false }}
+            />
+            <Stack.Screen
+                name="AddMedicine"
+                component={AddMedicineScreen}
+                options={{
+                    headerShown: false, // We handle our own header
+                    presentation: 'modal' // Nice modal presentation
+                }}
             />
         </Stack.Navigator>
     );

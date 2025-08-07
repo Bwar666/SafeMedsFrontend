@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { IconButton, PageIndicator } from '../components';
 import { BasicInfoForm, GenderBirthForm, AllergyForm } from '../components/forms';
-import { apiService, UserStorageService, CreateUserRequest, ApiError } from '../services/userApi';
+import { userService, UserStorageService, CreateUserRequest, ApiError } from '../services/user/UserService';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
 type ProfileCreationScreenProps = StackScreenProps<RootStackParamList, 'ProfileCreation'>;
@@ -51,7 +51,7 @@ const ProfileCreationScreen: React.FC<ProfileCreationScreenProps> = ({ navigatio
     };
 
     const createProfile = async (profileData: CreateUserRequest) => {
-        const createdUser = await apiService.createUser(profileData);
+        const createdUser = await userService.createUser(profileData);
         await UserStorageService.storeUser(createdUser);
         return createdUser;
     };
@@ -80,7 +80,7 @@ const ProfileCreationScreen: React.FC<ProfileCreationScreenProps> = ({ navigatio
             };
 
             await createProfile(profileData);
-            navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+            navigation.reset({ index: 0, routes: [{ name: "HomeTab" }] });
         } catch (error) {
             handleApiError(error);
         } finally {

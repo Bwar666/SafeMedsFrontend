@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
 
 interface HomeScreenProps {
     navigation: HomeScreenNavigationProp;
@@ -102,7 +102,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 {/* Medicine Schedule Placeholder */}
                 <View className={`mt-10 p-5 rounded-xl w-full items-center ${isDark ? 'bg-slate-800' : 'bg-gray-100'}`}>
                     <Text className={`text-lg font-semibold mb-2 text-center ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
-                        📅 Today's Medicine Schedule
+                        📅 Todays Medicine Schedule
                     </Text>
                     <Text className={`text-sm text-center ${isDark ? 'text-slate-300' : 'text-gray-500'}`}>
                         Your medicine schedule will appear here

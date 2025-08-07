@@ -57,7 +57,7 @@ const handleApiResponse = async <T>(response: Response): Promise<T> => {
 };
 
 // API Service Class
-class ApiService {
+class UserService {
     private readonly baseUrl: string;
 
     constructor(baseUrl: string = API_BASE_URL) {
@@ -159,4 +159,4 @@ export class UserStorageService {
 }
 
 // Export singleton instance
-export const apiService = new ApiService();
+export const userService = new UserService();
