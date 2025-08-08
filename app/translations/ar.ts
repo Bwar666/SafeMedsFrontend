@@ -418,4 +418,127 @@ export const ar = {
     takeWith: 'تناول مع',
     dose: 'جرعة',
     doses: 'جرعات',
+
+    all: 'الكل',
+    paused: 'متوقف',
+    resumed: 'مُستأنف',
+    pause: 'إيقاف',
+    resume: 'استئناف',
+
+    editMedicine: 'تعديل الدواء',
+    deleteMedicine: 'حذف الدواء',
+    confirmDelete: 'هل أنت متأكد من حذف',
+    medicineDeleted: 'تم حذف الدواء بنجاح',
+    deleteError: 'فشل في حذف الدواء',
+    pauseError: 'فشل في إيقاف الدواء',
+    resumeError: 'فشل في استئناف الدواء',
+
+    noActiveMedicines: 'لا توجد أدوية نشطة',
+    noPausedMedicines: 'لا توجد أدوية متوقفة',
+    noActiveMedicinesDesc: 'جميع أدويتك متوقفة حالياً',
+    noPausedMedicinesDesc: 'جميع أدويتك نشطة',
+
+    status: 'الحالة',
+    actions: 'الإجراءات',
+    details: 'التفاصيل',
+    schedule: 'الجدول',
+
+    nextDose: 'الجرعة التالية',
+    lastTaken: 'آخر جرعة',
+    dosesRemaining: 'الجرعات المتبقية',
+    refillNeeded: 'يحتاج إعادة تعبئة',
+
+    loadingMedicines: 'جاري تحميل الأدوية...',
+    loadError: 'فشل في تحميل الأدوية',
+
+    allergyWarning: 'تحذير من الحساسية',
+
+    medicinePaused: 'تم إيقاف الدواء بنجاح',
+    medicineResumed: 'تم استئناف الدواء بنجاح',
+
+    // Medicine Management
+    resumeDescription: 'استمر في جدول العلاج الخاص بك',
+    pauseDescription: 'توقف مؤقتاً عن تناول هذا الدواء',
+    additionalInfo: 'معلومات إضافية',
+    goBack: 'العودة',
+    medicineNotFound: 'لم يتم العثور على الدواء',
+    toggleError: 'فشل في تغيير حالة الدواء',
+    fetchError: 'فشل في جلب البيانات',
+    editNote: 'ملاحظة: سيتم الحفاظ على معلومات الجدولة والجرعة. يمكن تعديل المعلومات الأساسية فقط هنا.',
+    enterCondition: 'أدخل الحالة المرضية',
+    enterMedicineName: 'أدخل اسم الدواء',
+    saving: 'جاري الحفظ...',
+    updateError: 'فشل في تحديث الدواء. يرجى المحاولة مرة أخرى.',
+    medicineDetail: 'تفاصيل الدواء',
+    conditionRequired: 'الحالة المرضية مطلوبة',
+    medicineNameRequired: 'اسم الدواء مطلوب',
+    medicineUpdated: 'تم تحديث الدواء بنجاح',
+
+    // AI Warnings
+    loadingWarnings: 'جاري تحميل التحذيرات...',
+    low: 'منخفض',
+    medium: 'متوسط',
+    high: 'عالي',
+    critical: 'حرج',
+    aiWarningDetail: 'تفاصيل تحذير الذكاء الاصطناعي',
+    learnMore: 'اعرف المزيد',
+    detected: 'تم الكشف عنه',
+    recommendation: 'التوصية',
+    affectedMedicines: 'الأدوية المتأثرة',
+    warningDetails: 'تفاصيل التحذير',
+    lowPriority: 'أولوية منخفضة',
+    mediumPriority: 'أولوية متوسطة',
+    highPriority: 'أولوية عالية',
+    criticalPriority: 'أولوية حرجة',
+
+    pauseMedicine: "إيقاف الدواء مؤقتًا",
+    resumeMedicine: "استئناف الدواء",
+
+    medicineUpdatedSuccess: "تم تحديث الدواء بنجاح",
+    loadingMedicine: "جاري تحميل الدواء...",
+    previous: "السابق",
+    updateMedicine: "تحديث الدواء",
+
+    /////////////
+    inventorySettings: 'المخزون والإعدادات',
+    inventoryDescription: 'اضبط مخزونك الحالي وتفضيلاتك',
+    inventoryManagement: 'إدارة المخزون',
+    totalInventory: 'إجمالي المخزون',
+    currentInventory: 'المخزون الحالي',
+    unit: 'الوحدة',
+    enterAmount: 'أدخل الكمية',
+    enterCurrentAmount: 'الكمية الحالية',
+    autoDeductInventory: 'خصم تلقائي من المخزون',
+    autoDeductDescription: 'تقليل العدد تلقائياً عند التناول',
+    inventorySummary: 'ملخص المخزون',
+
+    // Units
+    pills: 'حبوب',
+    units: 'وحدات',
+    sachets: 'أكياس',
+    patches: 'لصقات',
+    puffs: 'بخات',
+
+    // Notification Settings
+    notificationSettings: 'إعدادات الإشعارات',
+    enableNotifications: 'تفعيل الإشعارات',
+    notificationDescription: 'احصل على تذكيرات لتناول دوائك',
+    missedDoseThreshold: 'تحديد كفائتة بعد',
+    '30Minutes': '30 دقيقة',
+    '1Hour': 'ساعة واحدة',
+    '2Hours': 'ساعتان',
+    '4Hours': '4 ساعات',
+    '8Hours': '8 ساعات',
+    '12Hours': '12 ساعة',
+
+    // Late Intake Settings
+    lateIntakeSettings: 'إعدادات التناول المتأخر',
+    allowLateIntake: 'السماح بالتناول المتأخر',
+    lateIntakeDescription: 'السماح بتناول الدواء بعد الوقت المحدد',
+    lateIntakeWindow: 'السماح بالتناول حتى',
+
+    // Back button handling
+    discardChanges: 'تجاهل التغييرات؟',
+    discardChangesDesc: 'هل أنت متأكد من أنك تريد تجاهل التغييرات والعودة؟',
+    discard: 'تجاهل',
 } as const;

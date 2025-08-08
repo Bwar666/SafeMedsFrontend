@@ -418,4 +418,134 @@ export const en = {
     takeWith: 'Take with',
     dose: 'dose',
     doses: 'doses',
+
+    all: 'All',
+    paused: 'Paused',
+    resumed: 'Resumed',
+    pause: 'Pause',
+    resume: 'Resume',
+
+    // Medicine Card Actions
+    editMedicine: 'Edit Medicine',
+    deleteMedicine: 'Delete Medicine',
+    confirmDelete: 'Are you sure you want to delete',
+    medicineDeleted: 'Medicine deleted successfully',
+    deleteError: 'Failed to delete medicine',
+    pauseError: 'Failed to pause medicine',
+    resumeError: 'Failed to resume medicine',
+
+    // Empty States
+    noActiveMedicines: 'No active medicines',
+    noPausedMedicines: 'No paused medicines',
+    noActiveMedicinesDesc: 'All your medicines are currently paused',
+    noPausedMedicinesDesc: 'All your medicines are active',
+
+    // Status and Actions
+    status: 'Status',
+    actions: 'Actions',
+    details: 'Details',
+    schedule: 'Schedule',
+
+    // Medicine Details
+    nextDose: 'Next dose',
+    lastTaken: 'Last taken',
+    dosesRemaining: 'Doses remaining',
+    refillNeeded: 'Refill needed',
+
+    // Loading and Error States
+    loadingMedicines: 'Loading medicines...',
+    loadError: 'Failed to load medicines',
+
+    // Warnings and Alerts
+    allergyWarning: 'Allergy Warning',
+
+    // Success Messages
+    medicinePaused: 'Medicine paused successfully',
+    medicineResumed: 'Medicine resumed successfully',
+
+    // Medicine Management
+    resumeDescription: 'Continue your treatment schedule',
+    pauseDescription: 'Temporarily stop taking this medicine',
+    additionalInfo: 'Additional Information',
+    goBack: 'Go Back',
+    medicineNotFound: 'Medicine not found',
+    toggleError: 'Failed to toggle medicine status',
+    fetchError: 'Failed to fetch data',
+    editNote: 'Note: Schedule and dosage information will be preserved. Only basic information can be edited here.',
+    enterCondition: 'Enter condition',
+    enterMedicineName: 'Enter medicine name',
+    saving: 'Saving...',
+    updateError: 'Failed to update medicine. Please try again.',
+    medicineDetail: 'Medicine Detail',
+    conditionRequired: 'Condition is required',
+    medicineNameRequired: 'Medicine name is required',
+    medicineUpdated: 'Medicine updated successfully',
+
+    // AI Warnings
+    loadingWarnings: 'Loading warnings...',
+    low: 'Low',
+    medium: 'Medium',
+    high: 'High',
+    critical: 'Critical',
+    aiWarningDetail: 'AI Warning Details',
+    learnMore: 'Learn More',
+    detected: 'Detected',
+    recommendation: 'Recommendation',
+    affectedMedicines: 'Affected Medicines',
+    warningDetails: 'Warning Details',
+    lowPriority: 'Low Priority',
+    mediumPriority: 'Medium Priority',
+    highPriority: 'High Priority',
+    criticalPriority: 'Critical Priority',
+
+    pauseMedicine: "Pause Medicine",
+    resumeMedicine: "Resume Medicine",
+
+    medicineUpdatedSuccess: "Medicine updated successfully",
+    loadingMedicine: "Loading medicine...",
+    previous: "Previous",
+    updateMedicine: "Update Medicine",
+
+    inventorySettings: 'Inventory & Settings',
+    inventoryDescription: 'Set your current stock and preferences',
+    inventoryManagement: 'Inventory Management',
+    totalInventory: 'Total Inventory',
+    currentInventory: 'Current Inventory',
+    unit: 'Unit',
+    enterAmount: 'Enter amount',
+    enterCurrentAmount: 'Current amount',
+    autoDeductInventory: 'Auto-deduct inventory',
+    autoDeductDescription: 'Automatically reduce count when taken',
+    inventorySummary: 'Inventory Summary',
+
+    // Units
+    pills: 'Pills',
+    units: 'Units',
+    sachets: 'Sachets',
+    patches: 'Patches',
+    puffs: 'Puffs',
+
+    // Notification Settings
+    notificationSettings: 'Notification Settings',
+    enableNotifications: 'Enable notifications',
+    notificationDescription: 'Get reminders to take your medicine',
+    missedDoseThreshold: 'Mark as missed after',
+    '30Minutes': '30 minutes',
+    '1Hour': '1 hour',
+    '2Hours': '2 hours',
+    '4Hours': '4 hours',
+    '8Hours': '8 hours',
+    '12Hours': '12 hours',
+
+    // Late Intake Settings
+    lateIntakeSettings: 'Late Intake Settings',
+    allowLateIntake: 'Allow late intake',
+    lateIntakeDescription: 'Allow taking medicine after scheduled time',
+    lateIntakeWindow: 'Allow taking up to',
+
+    // Back button handling
+    discardChanges: 'Discard Changes?',
+    discardChangesDesc: 'Are you sure you want to discard your changes and go back?',
+    discard: 'Discard',
+
 } as const;

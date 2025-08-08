@@ -6,7 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Main'>;
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeTab'>;
 
 interface HomeScreenProps {
     navigation: HomeScreenNavigationProp;

@@ -1,58 +1,105 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl } from 'react-native';
 import { Search, Plus, Pill, Clock, MoreVertical, AlertTriangle } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { UserStorageService } from '../services/user/UserService';
+import { medicineService, MedicineResponse } from '../services/medicine/medicine/MedicineService';
 
-// Add navigation prop type
+// Navigation prop type
 type MedicinesScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeTab'>;
 
 interface MedicinesScreenProps {
     navigation: MedicinesScreenNavigationProp;
 }
 
-// Medicine Item Component
+// Medicine Item Component with navigation
 const MedicineItem: React.FC<{
-    name: string;
-    dosage: string;
-    frequency: string;
-    nextDose: string;
-    status: 'active' | 'paused' | 'completed';
-    allergies?: string[];
+    medicine: MedicineResponse;
+    onPress: () => void;
+    onMenuPress: () => void;
     isDark: boolean;
-}> = ({ name, dosage, frequency, nextDose, status, allergies, isDark }) => {
+}> = ({ medicine, onPress, onMenuPress, isDark }) => {
     const statusColors = {
         active: '#10B981',
         paused: '#F59E0B',
         completed: '#6B7280',
     };
 
-    const statusText = {
-        active: 'Active',
-        paused: 'Paused',
-        completed: 'Completed',
+    const getStatusText = (isActive: boolean) => ({
+        active: isActive ? 'Active' : 'Paused',
+        color: isActive ? statusColors.active : statusColors.paused
+    });
+
+    const status = getStatusText(medicine.isActive);
+
+    // Calculate next dose time from intakeSchedules
+    const getNextDose = () => {
+        if (!medicine.isActive || !medicine.intakeSchedules.length) return 'Paused';
+
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+
+        // Find next intake time today
+        const todayIntakes = medicine.intakeSchedules
+            .map(schedule => {
+                const [hours, minutes] = schedule.time.split(':').map(Number);
+                return { time: hours * 60 + minutes, original: schedule.time };
+            })
+            .sort((a, b) => a.time - b.time);
+
+        const nextIntake = todayIntakes.find(intake => intake.time > currentTime);
+
+        if (nextIntake) {
+            const hours = Math.floor(nextIntake.time / 60);
+            const minutes = nextIntake.time % 60;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHour = hours % 12 || 12;
+            return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+        }
+
+        // Next dose is tomorrow - show first intake time
+        if (todayIntakes.length > 0) {
+            const firstIntake = todayIntakes[0];
+            const hours = Math.floor(firstIntake.time / 60);
+            const minutes = firstIntake.time % 60;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHour = hours % 12 || 12;
+            return `Tomorrow ${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+        }
+
+        return 'Not scheduled';
     };
 
     return (
-        <TouchableOpacity className={`p-4 rounded-xl mb-3 ${isDark ? 'bg-slate-800' : 'bg-white'} shadow-sm`}>
+        <TouchableOpacity
+            onPress={onPress}
+            className={`p-4 rounded-xl mb-3 ${isDark ? 'bg-slate-800' : 'bg-white'} shadow-sm`}
+            activeOpacity={0.7}
+        >
             <View className="flex-row items-start justify-between mb-3">
                 <View className="flex-1">
                     <View className="flex-row items-center mb-1">
                         <View className={`w-8 h-8 rounded-full items-center justify-center mr-3`}
-                              style={{ backgroundColor: statusColors[status] + '20' }}>
-                            <Pill size={16} color={statusColors[status]} />
+                              style={{ backgroundColor: status.color + '20' }}>
+                            <Pill size={16} color={status.color} />
                         </View>
                         <Text className={`text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
-                            {name}
+                            {medicine.name}
                         </Text>
                     </View>
                     <Text className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'} ml-11`}>
-                        {dosage} • {frequency}
+                        {medicine.formattedDosage || 'No dosage'} • {medicine.intakeSchedules.length}x daily
                     </Text>
                 </View>
-                <TouchableOpacity className="p-2">
+                <TouchableOpacity
+                    onPress={onMenuPress}
+                    className="p-2"
+                    hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                >
                     <MoreVertical size={20} color={isDark ? '#94A3B8' : '#6B7280'} />
                 </TouchableOpacity>
             </View>
@@ -62,22 +109,22 @@ const MedicineItem: React.FC<{
                 <View className="flex-row items-center">
                     <Clock size={14} color={isDark ? '#94A3B8' : '#6B7280'} />
                     <Text className={`text-sm ml-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                        Next: {nextDose}
+                        Next: {getNextDose()}
                     </Text>
                 </View>
-                <View className={`px-2 py-1 rounded-full`} style={{ backgroundColor: statusColors[status] + '20' }}>
-                    <Text className="text-xs font-medium" style={{ color: statusColors[status] }}>
-                        {statusText[status]}
+                <View className={`px-2 py-1 rounded-full`} style={{ backgroundColor: status.color + '20' }}>
+                    <Text className="text-xs font-medium" style={{ color: status.color }}>
+                        {status.active}
                     </Text>
                 </View>
             </View>
 
             {/* Allergy Warning */}
-            {allergies && allergies.length > 0 && (
+            {medicine.relatedAllergies && medicine.relatedAllergies.length > 0 && (
                 <View className="flex-row items-center mt-3 ml-11 p-2 rounded-lg bg-amber-500/10">
                     <AlertTriangle size={14} color="#F59E0B" />
                     <Text className="text-xs text-amber-600 ml-1 font-medium">
-                        Allergy Warning: {allergies.join(', ')}
+                        Allergy Warning: {medicine.relatedAllergies.map(a => a.name).join(', ')}
                     </Text>
                 </View>
             )}
@@ -139,50 +186,63 @@ const MedicinesScreen: React.FC<MedicinesScreenProps> = ({ navigation }) => {
     const { t } = useLanguage();
     const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [medicines, setMedicines] = useState<MedicineResponse[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
-    // Mock data
-    const medicines = [
-        {
-            name: 'Metformin',
-            dosage: '500mg',
-            frequency: '2x daily',
-            nextDose: '2:00 PM',
-            status: 'active' as const,
-            allergies: []
-        },
-        {
-            name: 'Lisinopril',
-            dosage: '10mg',
-            frequency: '1x daily',
-            nextDose: '8:00 AM',
-            status: 'completed' as const,
-            allergies: []
-        },
-        {
-            name: 'Penicillin',
-            dosage: '250mg',
-            frequency: '3x daily',
-            nextDose: 'Paused',
-            status: 'paused' as const,
-            allergies: ['Penicillin allergy detected']
-        },
-    ];
+    const loadMedicines = async (useCache = true) => {
+        try {
+            setLoading(true);
+            const user = await UserStorageService.getStoredUser();
+            if (!user) return;
+
+            const userMedicines = await medicineService.getMedicines(user.id, useCache);
+            setMedicines(userMedicines);
+        } catch (error) {
+            console.error('Error loading medicines:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    // Load medicines when screen comes into focus
+    useFocusEffect(
+        React.useCallback(() => {
+            loadMedicines(false); // Always refresh when screen comes into focus
+        }, [])
+    );
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        loadMedicines(false);
+    }, []);
 
     const categories = [
-        { key: 'all', title: 'All', count: medicines.length },
-        { key: 'active', title: 'Active', count: medicines.filter(m => m.status === 'active').length },
-        { key: 'paused', title: 'Paused', count: medicines.filter(m => m.status === 'paused').length },
-        { key: 'completed', title: 'Completed', count: medicines.filter(m => m.status === 'completed').length },
+        { key: 'all', title: t('all') || 'All', count: medicines.length },
+        { key: 'active', title: t('active') || 'Active', count: medicines.filter(m => m.isActive).length },
+        { key: 'paused', title: t('paused') || 'Paused', count: medicines.filter(m => !m.isActive).length },
     ];
 
     const filteredMedicines = medicines.filter(medicine => {
-        const matchesTab = activeTab === 'all' || medicine.status === activeTab;
+        const matchesTab = activeTab === 'all' ||
+            (activeTab === 'active' && medicine.isActive) ||
+            (activeTab === 'paused' && !medicine.isActive);
         const matchesSearch = medicine.name.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesTab && matchesSearch;
     });
 
     const handleAddMedicine = () => {
         navigation.navigate('AddMedicine');
+    };
+
+    const handleMedicinePress = (medicine: MedicineResponse) => {
+        navigation.navigate('MedicineDetail', { medicineId: medicine.id });
+    };
+
+    const handleMedicineMenu = (medicine: MedicineResponse) => {
+        // You can implement a bottom sheet menu here or navigate directly to edit
+        navigation.navigate('EditMedicine', { medicineId: medicine.id });
     };
 
     return (
@@ -218,17 +278,31 @@ const MedicinesScreen: React.FC<MedicinesScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Medicine List */}
-            <ScrollView className="flex-1 px-5">
-                {filteredMedicines.length > 0 ? (
-                    filteredMedicines.map((medicine, index) => (
+            <ScrollView
+                className="flex-1 px-5"
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#6366F1']}
+                        tintColor={isDark ? '#6366F1' : '#6366F1'}
+                        progressBackgroundColor={isDark ? '#1E293B' : '#FFFFFF'}
+                    />
+                }
+            >
+                {loading ? (
+                    <View className="flex-1 justify-center items-center py-20">
+                        <Text className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                            {t('loading') || 'Loading medicines...'}
+                        </Text>
+                    </View>
+                ) : filteredMedicines.length > 0 ? (
+                    filteredMedicines.map((medicine) => (
                         <MedicineItem
-                            key={index}
-                            name={medicine.name}
-                            dosage={medicine.dosage}
-                            frequency={medicine.frequency}
-                            nextDose={medicine.nextDose}
-                            status={medicine.status}
-                            allergies={medicine.allergies.length > 0 ? medicine.allergies : undefined}
+                            key={medicine.id}
+                            medicine={medicine}
+                            onPress={() => handleMedicinePress(medicine)}
+                            onMenuPress={() => handleMedicineMenu(medicine)}
                             isDark={isDark}
                         />
                     ))
@@ -246,6 +320,7 @@ const MedicinesScreen: React.FC<MedicinesScreenProps> = ({ navigation }) => {
                 onPress={handleAddMedicine}
                 className="absolute bottom-6 right-6 w-14 h-14 bg-indigo-500 rounded-full items-center justify-center shadow-lg"
                 style={{ elevation: 8 }}
+                activeOpacity={0.8}
             >
                 <Plus size={24} color="white" />
             </TouchableOpacity>

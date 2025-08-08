@@ -1,12 +1,10 @@
-export {
-    notificationService,
-    NotificationStorageService,
-    NotificationService
-} from './NotificationService';
-
+// index.ts
+export { notificationService, NotificationService } from './NotificationService';
+export { NotificationStorageService} from './NotificationStorageService';
 export type {
     NotificationResult,
     NotificationStatus,
     NotificationSchedule,
     ApiError
-} from './NotificationService';
+} from './notificationTypes';
+export { NotificationApiService } from './NotificationApiService';

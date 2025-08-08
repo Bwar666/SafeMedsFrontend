@@ -1,10 +1,10 @@
-export { medicineService } from './MedicineService';
-export { medicineUsageService } from './MedicineUsageService';
-export { medicineStatsService } from './MedicineStatsService';
-export { medicineMaintenanceService } from './MedicineMaintenanceService';
+export { medicineService } from './medicine/MedicineService';
+export { medicineUsageService } from './usage/MedicineUsageService';
+export { medicineStatsService } from './stats/MedicineStatsService';
+export { medicineMaintenanceService } from './maintenance/MedicineMaintenanceService';
 
 // Export all types from medicine services
 export type {
     MedicineRequest,
     MedicineResponse,
-} from './MedicineService';
+} from './medicine/MedicineService';

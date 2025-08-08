@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Edit, AlertTriangle, CheckCircle } from 'lucide-react-native';
-import { MedicineForm, FrequencyType, FoodInstruction } from '../../services/medicine/MedicineService';
+import {FoodInstruction, FrequencyType, MedicineForm} from "@/app/services/medicine/medicine/MedicineServiceTypes";
 
 interface FormData {
     name: string;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { FoodInstruction } from '../../services/medicine/MedicineService';
+import {FoodInstruction} from "@/app/services/medicine/medicine/MedicineServiceTypes";
 
 interface FormData {
     foodInstruction: FoodInstruction | null;

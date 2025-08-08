@@ -418,4 +418,85 @@ export const ku = {
     takeWith: 'بیخۆ لەگەڵ',
     dose: 'دۆز',
     doses: 'دۆزەکان',
+
+    all: 'هەموو',
+    paused: 'وەستێندراوە',
+    resumed: 'دووبارە دەستپێکردووە',
+    pause: 'وەستاندن',
+    resume: 'دووبارە دەستپێکردن',
+
+    editMedicine: 'دەرمان بگۆڕە',
+    deleteMedicine: 'دەرمان بسڕەوە',
+    confirmDelete: 'دڵنیای لە سڕینەوەی',
+    medicineDeleted: 'دەرمان بە سەرکەوتوویی سڕایەوە',
+    deleteError: 'سڕینەوەی دەرمان نەگەیشت',
+    pauseError: 'وەستاندنی دەرمان نەگەیشت',
+    resumeError: 'دووبارە دەستپێکردنی دەرمان نەگەیشت',
+
+    noActiveMedicines: 'هیچ دەرمانێکی چالاک نییە',
+    noPausedMedicines: 'هیچ دەرمانێکی وەستێندراو نییە',
+    noActiveMedicinesDesc: 'هەموو دەرمانەکانت لە ئێستادا وەستێندراون',
+    noPausedMedicinesDesc: 'هەموو دەرمانەکانت چالاکن',
+
+    status: 'دۆخ',
+    actions: 'کردارەکان',
+    details: 'وردەکارییەکان',
+    schedule: 'خشتە',
+
+    nextDose: 'دۆزی داهاتوو',
+    lastTaken: 'کۆتا جار وەرگیراو',
+    dosesRemaining: 'دۆزەکانی ماوە',
+    refillNeeded: 'پێویستی بە پڕکردنەوە',
+
+    loadingMedicines: 'دەرمانەکان دادەبەزرێن...',
+    loadError: 'بارکردنی دەرمانەکان نەگەیشت',
+
+
+    allergyWarning: 'ئاگاداری هەستیاری',
+
+    medicinePaused: 'دەرمان بە سەرکەوتوویی وەستێندرا',
+    medicineResumed: 'دەرمان بە سەرکەوتوویی دووبارە دەستپێکرد',
+
+    // Medicine Management
+    resumeDescription: 'خشتەی چارەسەرییەکەت بەردەوام بکە',
+    pauseDescription: 'بە کاتی دەرمانەکە بوەستێنە',
+    additionalInfo: 'زانیاری زیاتر',
+    goBack: 'بگەڕێوە',
+    medicineNotFound: 'دەرمان نەدۆزرایەوە',
+    toggleError: 'گۆڕینی دۆخی دەرمان سەرنەکەوت',
+    fetchError: 'وەرگرتنی داتا سەرنەکەوت',
+    editNote: 'تێبینی: زانیاری خشتە و دۆز پاراستن دەکرێت. تەنها زانیاری بنەڕەتی لێرە گۆڕین دەکرێت.',
+    enterCondition: 'نەخۆشی داخڵ بکە',
+    enterMedicineName: 'ناوی دەرمان داخڵ بکە',
+    saving: 'پاشەکەوت دەکرێت...',
+    updateError: 'نوێکردنەوەی دەرمان سەرنەکەوت. دووبارە هەوڵ بدەوە.',
+    medicineDetail: 'وردەکاری دەرمان',
+    conditionRequired: 'نەخۆشی پێویستە',
+    medicineNameRequired: 'ناوی دەرمان پێویستە',
+    medicineUpdated: 'دەرمان بە سەرکەوتوویی نوێکرایەوە',
+
+    // AI Warnings
+    loadingWarnings: 'ئاگادارکردنەوەکان بارناکرێن...',
+    low: 'کەم',
+    medium: 'مامناوەند',
+    high: 'زۆر',
+    critical: 'گرنگ',
+    aiWarningDetail: 'وردەکاری ئاگادارکردنەوەی AI',
+    learnMore: 'زیاتر فێربە',
+    detected: 'دۆزرایەوە',
+    recommendation: 'پێشنیاز',
+    affectedMedicines: 'دەرمانە کاریگەرەکان',
+    warningDetails: 'وردەکاری ئاگادارکردنەوە',
+    lowPriority: 'گرنگی کەم',
+    mediumPriority: 'گرنگی مامناوەند',
+    highPriority: 'گرنگی زۆر',
+    criticalPriority: 'گرنگی یەکجار بەرز',
+
+    pauseMedicine: "دەرمان بووەستێنە",
+    resumeMedicine: "دەرمان بەردەوامبە",
+
+    medicineUpdatedSuccess: "دەروون نوێکرایەوە بەسەرکەوتوویی",
+    loadingMedicine: "دەروونەکە لە بارکردنە...",
+    previous: "پێشوو",
+    updateMedicine: "نوێکردنەوەی دەروون",
 } as const;

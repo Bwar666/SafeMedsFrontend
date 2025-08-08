@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { Plus, Minus, Clock } from 'lucide-react-native';
-import { IntakeSchedule } from '../../services/medicine/MedicineService';
+import {IntakeSchedule} from "@/app/services/medicine/medicine/MedicineServiceTypes";
 
 interface FormData {
     intakeTimes: string[];

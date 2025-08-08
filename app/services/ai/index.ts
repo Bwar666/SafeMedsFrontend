@@ -1,15 +1,17 @@
 export {
-    aiWarningService,
-    AiWarningStorageService,
-    AiWarningService
-} from './AiWarningService';
+    WarningSeverity,
+    AiWarningType,
+    AiWarningStatus,
+    AiWarningSource
+} from './AiWarningTypes';
 
+// Export type-only (interfaces)
 export type {
     AiEvaluationResponse,
     AiWarningResponse,
-    AiWarningType,
-    WarningSeverity,
-    AiWarningStatus,
-    AiWarningSource,
     ApiError
-} from './AiWarningService';
+} from './AiWarningTypes';
+
+// Export services
+export { aiWarningService, AiWarningService } from './AiWarningService';
+export { AiWarningStorageService } from './AiWarningStorageService';

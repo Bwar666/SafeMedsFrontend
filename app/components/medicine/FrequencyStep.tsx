@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
-import { FrequencyType, DayOfWeek, FrequencyConfig } from '../../services/medicine/MedicineService';
+import {DayOfWeek, FrequencyConfig, FrequencyType} from "@/app/services/medicine/medicine/MedicineServiceTypes";
 
 interface FormData {
     frequencyType: FrequencyType | null;

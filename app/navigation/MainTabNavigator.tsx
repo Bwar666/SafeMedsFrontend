@@ -130,6 +130,7 @@ const MainTabNavigator: React.FC = () => {
                         title: t('medicines') || 'Medicines',
                         tabBarLabel: t('medicines') || 'Medicines',
                     }}
+
                 />
                 <Tab.Screen
                     name="AIWarningsTab"

@@ -5,17 +5,31 @@ import { View, Text } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { UserStorageService } from '../services/user/UserService';
+import { AiWarningResponse } from '../services/ai/AiWarningService';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import ProfileCreationScreen from '../screens/ProfileCreationScreen';
 import MainTabNavigator from './MainTabNavigator';
-import AddMedicineScreen from "@/app/screens/AddMedicineScreen";
+import AddMedicineScreen from '../screens/AddMedicineScreen';
+import MedicineDetailScreen from '../screens/MedicineDetailScreen';
+import EditMedicineScreen from '../screens/EditMedicineScreen';
+import AIWarningDetailScreen from '../screens/AIWarningDetailScreen';
 
-// Navigation Types
+
+// Updated Navigation Types
 export type RootStackParamList = {
     Onboarding: undefined;
     ProfileCreation: undefined;
-    HomeTab: undefined; // Changed from Home to Main
+    HomeTab: undefined;
     AddMedicine: undefined;
+    MedicineDetail: {
+        medicineId: string;
+    };
+    EditMedicine: {
+        medicineId: string;
+    };
+    AIWarningDetail: {
+        warning: AiWarningResponse;
+    };
 };
 
 type RouteKey = keyof RootStackParamList;
@@ -61,7 +75,7 @@ const AppNavigator: React.FC = () => {
         ]);
 
         if (hasCompletedOnboarding === 'true' && hasCreatedProfile && storedUser) {
-            return 'HomeTab'; // Navigate to Main (Tab Navigator) instead of Home
+            return 'HomeTab';
         }
 
         if (hasCompletedOnboarding === 'true') {
@@ -98,6 +112,7 @@ const AppNavigator: React.FC = () => {
             setInitialRoute(null);
             await initializeApp();
         } catch (error) {
+            console.error('Reset error:', error);
         }
     };
 
@@ -122,6 +137,7 @@ const AppNavigator: React.FC = () => {
 
     return (
         <Stack.Navigator initialRouteName={initialRoute} screenOptions={screenOptions}>
+            {/* Authentication Screens */}
             <Stack.Screen
                 name="Onboarding"
                 component={OnboardingScreen}
@@ -132,17 +148,80 @@ const AppNavigator: React.FC = () => {
                 component={ProfileCreationScreen}
                 options={{ gestureEnabled: true }}
             />
+
+            {/* Main App */}
             <Stack.Screen
                 name="HomeTab"
                 component={MainTabNavigator}
                 options={{ gestureEnabled: false }}
             />
+
+            {/* Modal Screens */}
             <Stack.Screen
                 name="AddMedicine"
                 component={AddMedicineScreen}
                 options={{
-                    headerShown: false, // We handle our own header
-                    presentation: 'modal' // Nice modal presentation
+                    headerShown: false,
+                    presentation: 'modal',
+                    gestureEnabled: true,
+                }}
+            />
+
+            {/* Detail Screens */}
+            <Stack.Screen
+                name="MedicineDetail"
+                component={MedicineDetailScreen}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: true,
+                    cardStyleInterpolator: ({ current, layouts }) => ({
+                        cardStyle: {
+                            transform: [{
+                                translateX: current.progress.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [layouts.screen.width, 0],
+                                }),
+                            }],
+                        },
+                    }),
+                }}
+            />
+
+            <Stack.Screen
+                name="EditMedicine"
+                component={EditMedicineScreen}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: true,
+                    cardStyleInterpolator: ({ current, layouts }) => ({
+                        cardStyle: {
+                            transform: [{
+                                translateX: current.progress.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [layouts.screen.width, 0],
+                                }),
+                            }],
+                        },
+                    }),
+                }}
+            />
+
+            <Stack.Screen
+                name="AIWarningDetail"
+                component={AIWarningDetailScreen}
+                options={{
+                    headerShown: false,
+                    gestureEnabled: true,
+                    cardStyleInterpolator: ({ current, layouts }) => ({
+                        cardStyle: {
+                            transform: [{
+                                translateX: current.progress.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [layouts.screen.width, 0],
+                                }),
+                            }],
+                        },
+                    }),
                 }}
             />
         </Stack.Navigator>

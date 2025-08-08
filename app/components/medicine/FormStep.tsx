@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { MedicineForm } from '../../services/medicine/MedicineService';
+import {MedicineForm} from "@/app/services/medicine/medicine/MedicineServiceTypes";
 
 interface FormData {
     form: MedicineForm | null;

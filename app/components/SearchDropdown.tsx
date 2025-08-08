@@ -46,7 +46,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownAnimation = useRef(new Animated.Value(0)).current;
-    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const searchTimeoutRef = useRef<number | null>(null);
     // Convert SearchSuggestion to SearchResult
     const convertToSearchResult = (suggestion: SearchSuggestion): SearchResult => ({
         id: suggestion.value,

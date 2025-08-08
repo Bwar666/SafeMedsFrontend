@@ -1,10 +1,9 @@
-export {
-    userService,
-    UserStorageService
-} from './UserService'
-
+// index.ts
+export { userService } from './UserService';
+export { UserStorageService } from './UserStorageService';
 export type {
     CreateUserRequest,
     SafeMedUser,
     ApiError
-} from './UserService';
+} from './UserTypes';
+export { UserService } from './UserApiService';
