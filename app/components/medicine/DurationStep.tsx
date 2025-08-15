@@ -1,276 +1,285 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    ScrollView,
+    Switch,
+} from 'react-native';
+import { Calendar, Clock, Infinity, Info, AlertCircle } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import {useTheme} from "@/app/context/ThemeContext";
+import {useLanguage} from "@/app/context/LanguageContext";
 
-interface FormData {
-    scheduleDuration: number;
-    refillReminderThreshold: number;
-    [key: string]: any;
-}
 
 interface DurationStepProps {
-    formData: FormData;
-    updateFormData: (updates: Partial<FormData>) => void;
-    isDark: boolean;
-    t: (key: string) => string;
-    isRTL: boolean;
+    formData: {
+        scheduleDuration: number | null;
+        [key: string]: any;
+    };
+    updateFormData: (updates: any) => void;
 }
 
 const DurationStep: React.FC<DurationStepProps> = ({
                                                        formData,
                                                        updateFormData,
-                                                       isDark,
-                                                       t,
-                                                       isRTL,
                                                    }) => {
-    const commonDurations = [
-        { label: t('threeDays') || '3 Days', days: 3, icon: '📅' },
-        { label: t('oneWeek') || '1 Week', days: 7, icon: '📆' },
-        { label: t('twoWeeks') || '2 Weeks', days: 14, icon: '🗓️' },
-        { label: t('oneMonth') || '1 Month', days: 30, icon: '📋' },
-        { label: t('twoMonths') || '2 Months', days: 60, icon: '📅' },
-        { label: t('threeMonths') || '3 Months', days: 90, icon: '🗓️' },
-        { label: t('ongoing') || 'Ongoing', days: 365, icon: '♾️' },
+    const { theme } = useTheme();
+    const { t, isRTL } = useLanguage();
+
+    const [hasEndDate, setHasEndDate] = useState(formData.scheduleDuration !== null);
+    const [customDuration, setCustomDuration] = useState(
+        formData.scheduleDuration?.toString() || '150'
+    );
+
+    // Common duration presets
+    const durationPresets = [
+        { label: t('threeDays') || '3 days', value: 3, description: t('shortCourse') || 'Short course treatment' },
+        { label: t('oneWeek') || '1 week', value: 7, description: t('weeklyCourse') || 'Weekly course' },
+        { label: t('twoWeeks') || '2 weeks', value: 14, description: t('twoWeekCourse') || 'Two week course' },
+        { label: t('oneMonth') || '1 month', value: 30, description: t('monthlyTreatment') || 'Monthly treatment' },
+        { label: t('threeMonths') || '3 months', value: 90, description: t('quarterlyTreatment') || 'Quarterly treatment' },
+        { label: t('sixMonths') || '6 months', value: 180, description: t('semiAnnualTreatment') || 'Semi-annual treatment' },
+        { label: t('oneYear') || '1 year', value: 365, description: t('annualTreatment') || 'Annual treatment' },
     ];
 
-    const reminderThresholds = [
-        { label: t('threeDaysBefore') || '3 days before', days: 3 },
-        { label: t('fiveDaysBefore') || '5 days before', days: 5 },
-        { label: t('oneWeekBefore') || '1 week before', days: 7 },
-        { label: t('twoWeeksBefore') || '2 weeks before', days: 14 },
-    ];
+    const handleEndDateToggle = (enabled: boolean) => {
+        Haptics.selectionAsync();
+        setHasEndDate(enabled);
 
-    const selectDuration = (days: number) => {
-        updateFormData({ scheduleDuration: days });
+        if (enabled) {
+            const duration = parseInt(customDuration) || 7;
+            updateFormData({ scheduleDuration: duration });
+        } else {
+            updateFormData({ scheduleDuration: 150 });
+        }
     };
 
-    const selectReminderThreshold = (days: number) => {
-        updateFormData({ refillReminderThreshold: days });
+    const handlePresetSelect = (value: number) => {
+        Haptics.selectionAsync();
+        setCustomDuration(value.toString());
+        updateFormData({ scheduleDuration: value });
     };
 
-    const updateCustomDuration = (value: string) => {
-        const days = parseInt(value) || 1;
-        updateFormData({ scheduleDuration: days });
-    };
+    const handleCustomDurationChange = (text: string) => {
+        const cleanedText = text.replace(/[^0-9]/g, '');
+        setCustomDuration(cleanedText);
 
-    const updateCustomReminder = (value: string) => {
-        const days = parseInt(value) || 1;
-        updateFormData({ refillReminderThreshold: days });
+        const duration = parseInt(cleanedText);
+        if (!isNaN(duration)){
+            if (duration > 0) {
+                updateFormData({ scheduleDuration: duration });
+            } else if (cleanedText === '') {
+                updateFormData({ scheduleDuration: null });
+            }
+        }
     };
 
     const formatDuration = (days: number) => {
-        if (days === 365) return t('ongoing') || 'Ongoing';
-        if (days >= 30) {
-            const months = Math.floor(days / 30);
-            return `${months} ${months === 1 ? 'month' : 'months'}`;
-        }
-        if (days >= 7) {
-            const weeks = Math.floor(days / 7);
-            const remainingDays = days % 7;
-            if (remainingDays === 0) {
-                return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
-            }
-            return `${weeks}w ${remainingDays}d`;
-        }
-        return `${days} ${days === 1 ? 'day' : 'days'}`;
+        if (days === 1) return t('oneDay') || '1 day';
+        if (days < 7) return `${days} ${t('days') || 'days'}`;
+        if (days === 7) return t('oneWeek') || '1 week';
+        if (days === 14) return t('twoWeeks') || '2 weeks';
+        if (days < 30) return `${Math.floor(days / 7)} ${t('weeks') || 'weeks'}, ${days % 7} ${t('days') || 'days'}`;
+        if (days === 30) return t('oneMonth') || '1 month';
+        if (days < 365) return `${Math.floor(days / 30)} ${t('months') || 'months'}`;
+        if (days === 365) return t('oneYear') || '1 year';
+        return `${Math.floor(days / 365)} ${t('years') || 'years'}, ${Math.floor((days % 365) / 30)} ${t('months') || 'months'}`;
     };
 
+    const getCurrentDuration = () => {
+        return formData.scheduleDuration || parseInt(customDuration) || 0;
+    };
+
+    const durationValue = getCurrentDuration();
+
     return (
-        <View className="flex-1 p-5">
+        <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingBottom: 30 }}>
             {/* Header */}
             <View className="mb-6">
-                <Text className={`text-2xl font-bold text-center mb-2 ${
-                    isDark ? 'text-slate-100' : 'text-gray-800'
-                }`}>
-                    {t('duration') || 'Duration & Reminders'}
+                <Text style={{ color: theme.text }} className="text-2xl font-bold mb-2">
+                    {t('treatmentDuration') || 'Treatment Duration'}
                 </Text>
-                <Text className={`text-base text-center ${
-                    isDark ? 'text-slate-300' : 'text-gray-500'
-                }`}>
-                    {t('durationDescription') || 'How long will you take this medicine?'}
+                <Text style={{ color: theme.textSecondary }} className="text-base">
+                    {t('durationDescription') || 'How long will you be taking this medicine? (Optional)'}
                 </Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Treatment Duration */}
-                <View className="mb-8">
-                    <Text className={`text-sm font-medium mb-4 ${
-                        isDark ? 'text-slate-200' : 'text-gray-700'
-                    }`}>
-                        {t('treatmentDuration') || 'Treatment Duration'}
-                    </Text>
+            {/* End Date Toggle Card */}
+            <View style={{ backgroundColor: theme.card, borderColor: theme.border }} className="p-5 rounded-2xl mb-6 border shadow-sm">
+                <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center flex-1">
+                        {hasEndDate ? (
+                            <Calendar size={24} color={theme.textSecondary} />
+                        ) : (
+                            <Infinity size={24} color={theme.textSecondary} />
+                        )}
+                        <View className="ml-3 flex-1">
+                            <Text style={{ color: theme.text }} className="text-lg font-semibold">
+                                {hasEndDate ? (t('setEndDate') || 'Set End Date') : (t('continueIndefinitely') || 'Continue Indefinitely')}
+                            </Text>
+                            <Text style={{ color: theme.textSecondary }} className="text-sm">
+                                {hasEndDate
+                                    ? (t('specificDuration') || 'Treatment has a specific duration')
+                                    : (t('untilDoctorSays') || 'Take until doctor says to stop')}
+                            </Text>
+                        </View>
+                    </View>
 
-                    <View className="flex-row flex-wrap gap-3 mb-4">
-                        {commonDurations.map((duration) => (
-                            <TouchableOpacity
-                                key={duration.days}
-                                onPress={() => selectDuration(duration.days)}
-                                className={`flex-row items-center px-4 py-3 rounded-xl border ${
-                                    formData.scheduleDuration === duration.days
-                                        ? 'border-indigo-500 border-2 bg-indigo-500/10'
-                                        : isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                                }`}
-                                activeOpacity={0.7}
-                            >
-                                <Text className="text-lg mr-2">{duration.icon}</Text>
-                                <Text className={`font-medium ${
-                                    formData.scheduleDuration === duration.days
-                                        ? 'text-indigo-500'
-                                        : isDark ? 'text-slate-200' : 'text-gray-700'
-                                }`}>
-                                    {duration.label}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                    <Switch
+                        value={hasEndDate}
+                        onValueChange={handleEndDateToggle}
+                        trackColor={{ false: theme.border, true: theme.primary }}
+                        thumbColor={hasEndDate ? '#ffffff' : theme.textSecondary}
+                    />
+                </View>
+
+                {!hasEndDate && (
+                    <View style={{ backgroundColor: theme.surface }} className="mt-4 p-3 rounded-lg">
+                        <Text style={{ color: theme.textSecondary }} className="text-sm">
+                            {t('indefiniteMessage') || 'This medicine will continue for 5 months. You can always set an end date later or stop when your doctor advises.'}
+                        </Text>
+                    </View>
+                )}
+            </View>
+
+            {/* Duration Settings - Only show if end date is enabled */}
+            {hasEndDate && (
+                <>
+                    {/* Quick Duration Presets Grid */}
+                    <View style={{ backgroundColor: theme.card, borderColor: theme.border }} className="p-5 rounded-2xl mb-6 border shadow-sm">
+                        <Text style={{ color: theme.text }} className="text-lg font-semibold mb-4">
+                            {t('commonDurations') || 'Common Durations'}
+                        </Text>
+
+                        <View className="flex-row flex-wrap justify-between gap-3">
+                            {durationPresets.map((preset) => (
+                                <TouchableOpacity
+                                    key={preset.value}
+                                    onPress={() => handlePresetSelect(preset.value)}
+                                    style={{
+                                        backgroundColor: getCurrentDuration() === preset.value
+                                            ? theme.primaryLight
+                                            : theme.border,
+                                        borderColor: getCurrentDuration() === preset.value
+                                            ? theme.primary
+                                            : theme.primary,
+                                        borderWidth: getCurrentDuration() === preset.value ? 2 : 0,
+                                    }}
+                                    className="w-[48%] p-4 rounded-xl items-center"
+                                    activeOpacity={0.8}
+                                >
+                                    <Text style={{
+                                        color: getCurrentDuration() === preset.value
+                                            ? theme.text
+                                            : theme.text
+                                    }} className="font-medium text-lg">
+                                        {preset.label}
+                                    </Text>
+                                    <Text style={{
+                                        color: getCurrentDuration() === preset.value
+                                            ? theme.textSecondary
+                                            : theme.textSecondary
+                                    }} className="text-xs text-center mt-1">
+                                        {preset.description}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
                     </View>
 
                     {/* Custom Duration Input */}
-                    <View className={`p-4 rounded-xl border ${
-                        isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                    }`}>
-                        <Text className={`text-sm font-medium mb-2 ${
-                            isDark ? 'text-slate-200' : 'text-gray-700'
-                        }`}>
+                    <View style={{ backgroundColor: theme.card, borderColor: theme.border }} className="p-5 rounded-2xl mb-6 border shadow-sm">
+                        <Text style={{ color: theme.text }} className="text-lg font-semibold mb-4">
                             {t('customDuration') || 'Custom Duration'}
                         </Text>
-                        <View className="flex-row items-center">
-                            <TextInput
-                                value={formData.scheduleDuration.toString()}
-                                onChangeText={updateCustomDuration}
-                                className={`px-3 py-2 rounded-lg border w-20 text-center mr-3 ${
-                                    isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
-                                }`}
-                                keyboardType="numeric"
-                                placeholder="30"
-                                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                            />
-                            <Text className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                {t('days') || 'days'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
 
-                {/* Refill Reminder */}
-                <View className="mb-6">
-                    <Text className={`text-sm font-medium mb-4 ${
-                        isDark ? 'text-slate-200' : 'text-gray-700'
-                    }`}>
-                        {t('refillReminder') || 'Refill Reminder'}
-                    </Text>
-
-                    <View className="flex-row flex-wrap gap-3 mb-4">
-                        {reminderThresholds.map((threshold) => (
-                            <TouchableOpacity
-                                key={threshold.days}
-                                onPress={() => selectReminderThreshold(threshold.days)}
-                                className={`px-4 py-3 rounded-xl border ${
-                                    formData.refillReminderThreshold === threshold.days
-                                        ? 'border-purple-500 border-2 bg-purple-500/10'
-                                        : isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                                }`}
-                                activeOpacity={0.7}
-                            >
-                                <Text className={`font-medium ${
-                                    formData.refillReminderThreshold === threshold.days
-                                        ? 'text-purple-500'
-                                        : isDark ? 'text-slate-200' : 'text-gray-700'
-                                }`}>
-                                    {threshold.label}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    {/* Custom Reminder Input */}
-                    <View className={`p-4 rounded-xl border ${
-                        isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                    }`}>
-                        <Text className={`text-sm font-medium mb-2 ${
-                            isDark ? 'text-slate-200' : 'text-gray-700'
-                        }`}>
-                            {t('customReminder') || 'Custom Reminder'}
-                        </Text>
-                        <View className="flex-row items-center">
-                            <Text className={`mr-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                {t('remindMe') || 'Remind me'}
+                        <View>
+                            <Text style={{ color: theme.text }} className="text-sm font-medium mb-2">
+                                {t('numberOfDays') || 'Number of days'}
                             </Text>
-                            <TextInput
-                                value={formData.refillReminderThreshold.toString()}
-                                onChangeText={updateCustomReminder}
-                                className={`px-3 py-2 rounded-lg border w-16 text-center mx-2 ${
-                                    isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
-                                }`}
-                                keyboardType="numeric"
-                                placeholder="5"
-                                placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                            />
-                            <Text className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                {t('daysBefore') || 'days before running out'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Summary */}
-                <View className={`p-4 rounded-xl ${
-                    isDark ? 'bg-slate-800' : 'bg-gray-50'
-                }`}>
-                    <Text className={`font-semibold mb-3 ${
-                        isDark ? 'text-slate-100' : 'text-gray-800'
-                    }`}>
-                        {t('treatmentSummary') || 'Treatment Summary'}
-                    </Text>
-
-                    <View className="space-y-2">
-                        <View className="flex-row justify-between">
-                            <Text className={`${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                {t('duration') || 'Duration'}:
-                            </Text>
-                            <Text className={`font-medium ${
-                                isDark ? 'text-slate-100' : 'text-gray-800'
-                            }`}>
-                                {formatDuration(formData.scheduleDuration)}
-                            </Text>
-                        </View>
-
-                        <View className="flex-row justify-between">
-                            <Text className={`${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                {t('refillReminder') || 'Refill reminder'}:
-                            </Text>
-                            <Text className={`font-medium ${
-                                isDark ? 'text-slate-100' : 'text-gray-800'
-                            }`}>
-                                {formData.refillReminderThreshold} {formData.refillReminderThreshold === 1 ? 'day' : 'days'} before
-                            </Text>
-                        </View>
-
-                        {formData.scheduleDuration < 365 && (
-                            <View className="flex-row justify-between">
-                                <Text className={`${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                                    {t('endDate') || 'Estimated end'}:
-                                </Text>
-                                <Text className={`font-medium ${
-                                    isDark ? 'text-slate-100' : 'text-gray-800'
-                                }`}>
-                                    {new Date(Date.now() + formData.scheduleDuration * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                            <View className="flex-row items-center">
+                                <TextInput
+                                    value={customDuration}
+                                    onChangeText={handleCustomDurationChange}
+                                    placeholder="7"
+                                    keyboardType="numeric"
+                                    style={{
+                                        color: theme.text,
+                                        backgroundColor: theme.surface,
+                                        borderColor: theme.border
+                                    }}
+                                    className="flex-1 text-base px-4 py-3 rounded-lg border"
+                                    placeholderTextColor={theme.textSecondary}
+                                />
+                                <Text style={{ color: theme.textSecondary }} className="ml-3">
+                                    {t('days') || 'days'}
                                 </Text>
                             </View>
-                        )}
+
+                            {durationValue > 0 && (
+                                <View className="flex-row items-center mt-4">
+                                    <Calendar size={18} color={theme.textSecondary} />
+                                    <Text style={{ color: theme.textSecondary }} className="ml-2">
+                                        {t('approximately') || 'Approximately'} {formatDuration(durationValue)}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
+                    {/* Duration Summary */}
+                    {durationValue > 0 && (
+                        <View style={{ backgroundColor: `${theme.success}20`, borderColor: theme.success }} className="p-4 rounded-2xl mb-6 border">
+                            <View className="flex-row items-start">
+                                <Clock size={18} color={theme.success} />
+                                <View className="ml-3 flex-1">
+                                    <Text style={{ color: theme.success }} className="text-sm font-medium mb-1">
+                                        {t('treatmentSummary') || 'Treatment Summary'}
+                                    </Text>
+                                    <Text style={{ color: theme.success }} className="text-xs">
+                                        {t('treatmentSummaryMessage') || `You'll take this medicine for ${durationValue} days (${formatDuration(durationValue)}). The app will remind you when the treatment period is ending.`}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+                </>
+            )}
+
+            {/* Help Information */}
+            <View style={{ backgroundColor: `${theme.primary}20`, borderColor: theme.primary }} className="p-4 rounded-2xl border">
+                <View className="flex-row items-start">
+                    <Info size={16} color={theme.primary} />
+                    <View className="ml-3 flex-1">
+                        <Text style={{ color: theme.primary }} className="text-sm font-medium mb-1">
+                            {t('aboutTreatmentDuration') || 'About Treatment Duration'}
+                        </Text>
+                        <Text style={{ color: theme.primary }} className="text-xs leading-relaxed">
+                            {t('treatmentTips') || '• Always follow your doctor\'s specific instructions\n• Some medicines are taken for life (like blood pressure medication)\n• Others have specific courses (like antibiotics)\n• You can always adjust the duration later\n• The app will notify you when treatment is ending'}
+                        </Text>
                     </View>
                 </View>
-            </ScrollView>
-
-            {/* Help Text */}
-            <View className={`mt-6 p-4 rounded-xl ${
-                isDark ? 'bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50 border border-yellow-200'
-            }`}>
-                <Text className={`text-sm ${
-                    isDark ? 'text-yellow-300' : 'text-yellow-700'
-                }`}>
-                    💡 {t('durationTip') || 'Tip: Set the duration as prescribed. You can always extend or modify it later.'}
-                </Text>
             </View>
-        </View>
+
+            {/* Validation Warning */}
+            {hasEndDate && durationValue <= 0 && (
+                <View style={{ backgroundColor: `${theme.error}20`, borderColor: theme.error }} className="mt-4 p-4 rounded-2xl border">
+                    <View className="flex-row items-start">
+                        <AlertCircle size={16} color={theme.error} />
+                        <View className="ml-3 flex-1">
+                            <Text style={{ color: theme.error }} className="text-sm font-medium">
+                                {t('enterValidDuration') || 'Please enter a valid duration'}
+                            </Text>
+                            <Text style={{ color: theme.error }} className="text-xs mt-1">
+                                {t('durationMustBePositive') || 'The duration must be a positive number of days.'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            )}
+        </ScrollView>
     );
 };
 

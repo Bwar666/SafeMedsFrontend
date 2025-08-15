@@ -2,7 +2,6 @@
 import {
     TakeMedicineRequest,
     SkipMedicineRequest,
-    PauseMedicineRequest,
     MedicineUsageResponse,
     DailyMedicineSchedule,
     IntakeEvent,
@@ -12,7 +11,7 @@ import {
 } from './MedicineUsageTypes';
 
 // Configuration (using same as userApi.ts)
-const COMPUTER_IP = '192.168.1.5';
+const COMPUTER_IP = '192.168.1.4';
 const API_BASE_URL = __DEV__
     ? `http://${COMPUTER_IP}:8080`
     : 'https://your-production-api.com';
@@ -27,7 +26,23 @@ const handleApiResponse = async <T>(response: Response): Promise<T> => {
             details: errorData
         } as ApiError;
     }
-    return response.json();
+
+    // Handle empty responses (204 No Content) or any response with no content
+    if (response.status === 204 || !response.headers.get('content-type')?.includes('application/json')) {
+        return null as any;
+    }
+
+    // Check if response has content before trying to parse JSON
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+        return null as any;
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        return null as any;
+    }
 };
 
 // Medicine Usage API Service Class
@@ -71,10 +86,9 @@ export class MedicineUsageApiService {
     }
 
     // Pause Medicine - POST /api/users/{userId}/medicines/{medicineId}/pause
-    async pauseMedicine(userId: string, medicineId: string, request: PauseMedicineRequest): Promise<void> {
+    async pauseMedicine(userId: string, medicineId: string): Promise<void> {
         return this.makeRequest<void>(`/api/users/${userId}/medicines/${medicineId}/pause`, {
             method: 'POST',
-            body: JSON.stringify(request),
         });
     }
 

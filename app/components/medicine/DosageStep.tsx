@@ -1,289 +1,598 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
-import { Plus, Minus, Clock } from 'lucide-react-native';
-import {IntakeSchedule} from "@/app/services/medicine/medicine/MedicineServiceTypes";
-
-interface FormData {
-    intakeTimes: string[];
-    intakeSchedules: IntakeSchedule[];
-    [key: string]: any;
-}
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    ScrollView,
+    Alert,
+    Platform
+} from 'react-native';
+import { Plus, Trash2, Clock, AlertCircle } from 'lucide-react-native';
+import { IntakeSchedule } from '@/app/services/medicine/medicine/MedicineServiceTypes';
+import * as Haptics from 'expo-haptics';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useLanguage } from "@/app/context/LanguageContext";
+import { useTheme } from "@/app/context/ThemeContext";
 
 interface DosageStepProps {
-    formData: FormData;
-    updateFormData: (updates: Partial<FormData>) => void;
-    isDark: boolean;
-    t: (key: string) => string;
-    isRTL: boolean;
+    formData: any;
+    updateFormData: (updates: any) => void;
+    allowCustomTimes?: boolean;
 }
 
 const DosageStep: React.FC<DosageStepProps> = ({
                                                    formData,
                                                    updateFormData,
-                                                   isDark,
-                                                   t,
-                                                   isRTL,
+                                                   allowCustomTimes = true
                                                }) => {
-    const [selectedTimeIndex, setSelectedTimeIndex] = useState<number | null>(null);
+    const { theme, isDark } = useTheme();
+    const { t, isRTL } = useLanguage();
+    const [showCustomTimeInput, setShowCustomTimeInput] = useState(false);
+    const [customTime, setCustomTime] = useState('08:00');
+    const [customAmount, setCustomAmount] = useState('1');
+    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [timePickerMode, setTimePickerMode] = useState<'new' | 'edit' | null>(null);
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    const commonTimes = [
-        { label: t('morning') || 'Morning', time: '08:00', icon: '🌅' },
-        { label: t('afternoon') || 'Afternoon', time: '14:00', icon: '☀️' },
-        { label: t('evening') || 'Evening', time: '18:00', icon: '🌆' },
-        { label: t('night') || 'Night', time: '22:00', icon: '🌙' },
+    const frequencyPresets = [
+        {
+            label: t('onceDaily'),
+            schedules: [{ time: '08:00', amount: 1 }],
+            description: t('onceDailyDesc')
+        },
+        {
+            label: t('twiceDaily'),
+            schedules: [
+                { time: '08:00', amount: 1 },
+                { time: '20:00', amount: 1 }
+            ],
+            description: t('twiceDailyDesc')
+        },
+        {
+            label: t('thriceDaily'),
+            schedules: [
+                { time: '08:00', amount: 1 },
+                { time: '14:00', amount: 1 },
+                { time: '20:00', amount: 1 }
+            ],
+            description: t('thriceDailyDesc')
+        },
+        {
+            label: t('every8Hours'),
+            schedules: [
+                { time: '06:00', amount: 1 },
+                { time: '14:00', amount: 1 },
+                { time: '22:00', amount: 1 }
+            ],
+            description: t('every8HoursDesc')
+        },
     ];
 
-    const addIntakeTime = () => {
-        const newTime = '12:00';
-        const newSchedule: IntakeSchedule = { time: newTime, amount: 1 };
-
-        updateFormData({
-            intakeTimes: [...formData.intakeTimes, newTime],
-            intakeSchedules: [...formData.intakeSchedules, newSchedule]
-        });
+    const formatTime12Hour = (time24: string): string => {
+        const [hours, minutes] = time24.split(':').map(Number);
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+        return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     };
 
-    const removeIntakeTime = (index: number) => {
-        if (formData.intakeSchedules.length === 1) {
+    const formatTime24Hour = (date: Date): string => {
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    };
+
+    const handleTimeChange = (event: any, selectedDate?: Date) => {
+        setShowTimePicker(false);
+        if (selectedDate) {
+            const timeString = formatTime24Hour(selectedDate);
+
+            if (timePickerMode === 'new') {
+                setCustomTime(timeString);
+            } else if (timePickerMode === 'edit' && editingIndex !== null) {
+                updateSchedule(editingIndex, 'time', timeString);
+            }
+        }
+    };
+
+    const openTimePicker = (mode: 'new' | 'edit', index?: number) => {
+        Haptics.selectionAsync();
+        setTimePickerMode(mode);
+
+        if (mode === 'edit' && index !== undefined) {
+            setEditingIndex(index);
+        }
+
+        setShowTimePicker(true);
+    };
+
+    const addCustomSchedule = () => {
+        if (!customTime || !customAmount) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(
-                t('cannotRemove') || 'Cannot Remove',
-                t('atLeastOneIntake') || 'You must have at least one intake time.',
-                [{ text: t('ok') || 'OK' }]
+                t('error'),
+                t('enterTimeAndAmount'),
+                [{ text: t('ok') }]
             );
             return;
         }
 
-        const newIntakeTimes = formData.intakeTimes.filter((_, i) => i !== index);
-        const newSchedules = formData.intakeSchedules.filter((_, i) => i !== index);
+        const amount = parseFloat(customAmount);
+        if (isNaN(amount) || amount <= 0) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert(
+                t('error'),
+                t('enterValidAmount'),
+                [{ text: t('ok') }]
+            );
+            return;
+        }
+
+        const timeExists = formData.intakeSchedules.some((schedule: IntakeSchedule) =>
+            schedule.time === customTime
+        );
+
+        if (timeExists) {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert(
+                t('duplicateTime'),
+                t('duplicateTimeMessage'),
+                [{ text: t('ok') }]
+            );
+            return;
+        }
+
+        const newSchedule: IntakeSchedule = {
+            time: customTime,
+            amount: amount
+        };
+
+        const updatedSchedules = [...formData.intakeSchedules, newSchedule].sort((a, b) =>
+            a.time.localeCompare(b.time)
+        );
+
+        const updatedTimes = updatedSchedules.map(schedule => schedule.time);
 
         updateFormData({
-            intakeTimes: newIntakeTimes,
-            intakeSchedules: newSchedules
+            intakeSchedules: updatedSchedules,
+            intakeTimes: updatedTimes
+        });
+
+        setCustomTime('08:00');
+        setCustomAmount('1');
+        setShowCustomTimeInput(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    };
+
+    const removeSchedule = (index: number) => {
+        Haptics.selectionAsync();
+        const updatedSchedules = formData.intakeSchedules.filter((_: any, i: number) => i !== index);
+        const updatedTimes = updatedSchedules.map((schedule: IntakeSchedule) => schedule.time);
+
+        updateFormData({
+            intakeSchedules: updatedSchedules,
+            intakeTimes: updatedTimes
         });
     };
 
-    const updateIntakeTime = (index: number, time: string) => {
-        const newIntakeTimes = [...formData.intakeTimes];
-        const newSchedules = [...formData.intakeSchedules];
+    const updateSchedule = (index: number, field: 'time' | 'amount', value: string) => {
+        const updatedSchedules = [...formData.intakeSchedules];
 
-        newIntakeTimes[index] = time;
-        newSchedules[index] = { ...newSchedules[index], time };
+        if (field === 'time') {
+            const timeExists = updatedSchedules.some((schedule, i) =>
+                i !== index && schedule.time === value
+            );
+
+            if (timeExists) {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                Alert.alert(
+                    t('duplicateTime'),
+                    t('duplicateTimeMessage'),
+                    [{ text: t('ok') }]
+                );
+                return;
+            }
+
+            updatedSchedules[index].time = value;
+        } else if (field === 'amount') {
+            updatedSchedules[index].amount = value;
+        }
+
+        updatedSchedules.sort((a, b) => a.time.localeCompare(b.time));
+        const updatedTimes = updatedSchedules.map(schedule => schedule.time);
 
         updateFormData({
-            intakeTimes: newIntakeTimes,
-            intakeSchedules: newSchedules
+            intakeSchedules: updatedSchedules,
+            intakeTimes: updatedTimes
         });
     };
 
-    const updateIntakeAmount = (index: number, amount: string) => {
-        const numAmount = parseFloat(amount) || 0;
-        const newSchedules = [...formData.intakeSchedules];
-        newSchedules[index] = { ...newSchedules[index], amount: numAmount };
+    const handleAmountBlur = (index: number, value: string) => {
+        const updatedSchedules = [...formData.intakeSchedules];
+        const amount = parseFloat(value);
 
-        updateFormData({ intakeSchedules: newSchedules });
-    };
-
-    const selectCommonTime = (time: string) => {
-        if (selectedTimeIndex !== null) {
-            updateIntakeTime(selectedTimeIndex, time);
-            setSelectedTimeIndex(null);
+        if (isNaN(amount) || amount <= 0 || value === '') {
+            updatedSchedules[index].amount = 1;
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         } else {
-            // Add new time
-            const newSchedule: IntakeSchedule = { time, amount: 1 };
-            updateFormData({
-                intakeTimes: [...formData.intakeTimes, time],
-                intakeSchedules: [...formData.intakeSchedules, newSchedule]
-            });
+            updatedSchedules[index].amount = amount;
         }
+
+        updateFormData({
+            intakeSchedules: updatedSchedules,
+            intakeTimes: updatedSchedules.map(schedule => schedule.time)
+        });
     };
 
-    const formatTime = (time: string) => {
-        try {
-            const [hours, minutes] = time.split(':');
-            const hour = parseInt(hours);
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const displayHour = hour % 12 || 12;
-            return `${displayHour}:${minutes} ${ampm}`;
-        } catch {
-            return time;
-        }
+    const applyPreset = (preset: typeof frequencyPresets[0]) => {
+        Haptics.selectionAsync();
+        updateFormData({
+            intakeSchedules: preset.schedules,
+            intakeTimes: preset.schedules.map(s => s.time)
+        });
     };
+
+    const totalDoses = formData.intakeSchedules.reduce((sum: number, schedule: IntakeSchedule) =>
+        sum + (typeof schedule.amount === 'string' ? parseFloat(schedule.amount) || 0 : schedule.amount), 0);
 
     return (
-        <View className="flex-1 p-5">
-            {/* Header */}
+        <ScrollView
+            className="flex-1 px-4"
+            contentContainerStyle={{ paddingBottom: 30 }}
+            style={{ backgroundColor: theme.background }}
+        >
             <View className="mb-6">
-                <Text className={`text-2xl font-bold text-center mb-2 ${
-                    isDark ? 'text-slate-100' : 'text-gray-800'
-                }`}>
-                    {t('dosageAndTiming') || 'Dosage & Timing'}
+                <Text
+                    className="text-2xl font-bold mb-2"
+                    style={{ color: theme.text }}
+                >
+                    {t('dosage')}
                 </Text>
-                <Text className={`text-base text-center ${
-                    isDark ? 'text-slate-300' : 'text-gray-500'
-                }`}>
-                    {t('dosageDescription') || 'When and how much do you take?'}
+                <Text
+                    className="text-base"
+                    style={{ color: theme.textSecondary }}
+                >
+                    {allowCustomTimes ? t('setMedicationSchedule') : t('chooseWhenAndHowMuch')}
                 </Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Current Intake Schedule */}
+            {formData.intakeSchedules.length > 0 && (
                 <View className="mb-6">
-                    <Text className={`text-sm font-medium mb-3 ${
-                        isDark ? 'text-slate-200' : 'text-gray-700'
-                    }`}>
-                        {t('intakeSchedule') || 'Intake Schedule'}
-                    </Text>
-
-                    {formData.intakeSchedules.map((schedule, index) => (
-                        <View
-                            key={index}
-                            className={`flex-row items-center p-4 rounded-xl mb-3 ${
-                                isDark ? 'bg-slate-800' : 'bg-gray-50'
-                            }`}
+                    <View className="flex-row justify-between items-center mb-4">
+                        <Text
+                            className="text-lg font-semibold"
+                            style={{ color: theme.text }}
                         >
-                            <Clock size={20} color={isDark ? '#94A3B8' : '#6B7280'} />
-
-                            <TouchableOpacity
-                                onPress={() => setSelectedTimeIndex(selectedTimeIndex === index ? null : index)}
-                                className={`ml-3 px-3 py-2 rounded-lg border ${
-                                    selectedTimeIndex === index
-                                        ? 'border-indigo-500 bg-indigo-500/10'
-                                        : isDark ? 'border-slate-600' : 'border-gray-300'
-                                }`}
+                            {t('yourSchedule')}
+                        </Text>
+                        <View className="flex-row items-center">
+                            <Text
+                                className="text-sm mr-2"
+                                style={{ color: theme.textSecondary }}
                             >
-                                <Text className={`font-medium ${
-                                    selectedTimeIndex === index
-                                        ? 'text-indigo-500'
-                                        : isDark ? 'text-slate-100' : 'text-gray-800'
-                                }`}>
-                                    {formatTime(schedule.time)}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <View className="flex-row items-center ml-auto">
-                                <Text className={`mr-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                    Amount:
-                                </Text>
-                                <TextInput
-                                    value={schedule.amount.toString()}
-                                    onChangeText={(value) => updateIntakeAmount(index, value)}
-                                    className={`w-16 px-2 py-1 rounded border text-center ${
-                                        isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
-                                    }`}
-                                    keyboardType="decimal-pad"
-                                />
-
-                                <TouchableOpacity
-                                    onPress={() => removeIntakeTime(index)}
-                                    className="ml-3 p-2"
-                                    disabled={formData.intakeSchedules.length === 1}
+                                {t('total')}:
+                            </Text>
+                            <View
+                                className="px-2 py-1 rounded-full"
+                                style={{ backgroundColor: theme.primary + '22' }}
+                            >
+                                <Text
+                                    className="text-sm font-medium"
+                                    style={{ color: theme.primary }}
                                 >
-                                    <Minus
-                                        size={16}
-                                        color={formData.intakeSchedules.length === 1 ? '#9CA3AF' : '#EF4444'}
-                                    />
-                                </TouchableOpacity>
+                                    {totalDoses} {t('dosesDaily')}
+                                </Text>
                             </View>
                         </View>
-                    ))}
+                    </View>
 
-                    {/* Add New Time Button */}
-                    <TouchableOpacity
-                        onPress={addIntakeTime}
-                        className={`flex-row items-center justify-center p-3 rounded-xl border-2 border-dashed ${
-                            isDark ? 'border-slate-600' : 'border-gray-300'
-                        }`}
-                        activeOpacity={0.7}
-                    >
-                        <Plus size={20} color={isDark ? '#94A3B8' : '#6B7280'} />
-                        <Text className={`ml-2 font-medium ${
-                            isDark ? 'text-slate-300' : 'text-gray-600'
-                        }`}>
-                            {t('addIntakeTime') || 'Add Intake Time'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Common Times Quick Select */}
-                <View className="mb-6">
-                    <Text className={`text-sm font-medium mb-3 ${
-                        isDark ? 'text-slate-200' : 'text-gray-700'
-                    }`}>
-                        {t('commonTimes') || 'Common Times'}
-                        {selectedTimeIndex !== null && (
-                            <Text className={`text-xs ml-2 ${
-                                isDark ? 'text-slate-400' : 'text-gray-500'
-                            }`}>
-                                ({t('selectToUpdate') || 'Select to update selected time'})
-                            </Text>
-                        )}
-                    </Text>
-
-                    <View className="flex-row flex-wrap gap-3">
-                        {commonTimes.map((timeOption) => (
-                            <TouchableOpacity
-                                key={timeOption.time}
-                                onPress={() => selectCommonTime(timeOption.time)}
-                                className={`flex-row items-center px-4 py-3 rounded-xl border ${
-                                    formData.intakeTimes.includes(timeOption.time)
-                                        ? 'border-green-500 bg-green-500/10'
-                                        : isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                                }`}
-                                activeOpacity={0.7}
+                    <View className="space-y-3">
+                        {formData.intakeSchedules.map((schedule: IntakeSchedule, index: number) => (
+                            <View
+                                key={index}
+                                className="p-4 rounded-2xl border mb-2"
+                                style={{
+                                    backgroundColor: theme.card,
+                                    borderColor: theme.border,
+                                }}
                             >
-                                <Text className="text-lg mr-2">{timeOption.icon}</Text>
-                                <View>
-                                    <Text className={`font-medium ${
-                                        formData.intakeTimes.includes(timeOption.time)
-                                            ? 'text-green-500'
-                                            : isDark ? 'text-slate-200' : 'text-gray-700'
-                                    }`}>
-                                        {timeOption.label}
-                                    </Text>
-                                    <Text className={`text-xs ${
-                                        isDark ? 'text-slate-400' : 'text-gray-500'
-                                    }`}>
-                                        {formatTime(timeOption.time)}
-                                    </Text>
+                                <View className="flex-row items-center justify-between">
+                                    <View className="flex-row items-center">
+                                        <View
+                                            className="w-10 h-10 rounded-lg items-center justify-center mr-3"
+                                            style={{ backgroundColor: theme.surface }}
+                                        >
+                                            <Clock size={18} color={theme.textSecondary} />
+                                        </View>
+                                        <View>
+                                            <Text
+                                                className="font-medium"
+                                                style={{ color: theme.text }}
+                                            >
+                                                {formatTime12Hour(schedule.time)}
+                                            </Text>
+                                            <Text
+                                                className="text-xs"
+                                                style={{ color: theme.textSecondary }}
+                                            >
+                                                {schedule.amount} {t('doses')}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View className="flex-row items-center space-x-2">
+                                        <TouchableOpacity
+                                            onPress={() => removeSchedule(index)}
+                                            className="p-2"
+                                        >
+                                            <Trash2 size={18} color={theme.error} />
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
-                            </TouchableOpacity>
+
+                                <View className="flex-row mt-4 space-x-3">
+                                    <View className="flex-1">
+                                        <Text
+                                            className="text-xs mb-1"
+                                            style={{ color: theme.textSecondary }}
+                                        >
+                                            {t('time')}
+                                        </Text>
+                                        <TouchableOpacity
+                                            onPress={() => openTimePicker('edit', index)}
+                                            className="px-3 py-2 rounded-lg border"
+                                            style={{
+                                                borderColor: theme.border,
+                                                backgroundColor: theme.surface,
+                                                marginRight: 4
+                                            }}
+                                        >
+                                            <Text
+                                                className="text-base font-medium"
+                                                style={{ color: theme.text }}
+                                            >
+                                                {formatTime12Hour(schedule.time)}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <View className="w-24">
+                                        <Text
+                                            className="text-xs mb-1"
+                                            style={{ color: theme.textSecondary }}
+                                        >
+                                            {t('amount')}
+                                        </Text>
+                                        <TextInput
+                                            value={schedule.amount.toString()}
+                                            onChangeText={(value) => updateSchedule(index, 'amount', value)}
+                                            onBlur={() => handleAmountBlur(index, schedule.amount.toString())}
+                                            placeholder="1"
+                                            keyboardType="numeric"
+                                            className="text-base font-medium px-3 py-2 rounded-lg border text-center"
+                                            style={{
+                                                color: theme.text,
+                                                backgroundColor: theme.surface,
+                                                borderColor: theme.border,
+                                            }}
+                                            placeholderTextColor={theme.textSecondary}
+                                            selectTextOnFocus={true}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
                         ))}
                     </View>
                 </View>
+            )}
 
-                {/* Summary */}
-                <View className={`p-4 rounded-xl ${
-                    isDark ? 'bg-slate-800' : 'bg-gray-50'
-                }`}>
-                    <Text className={`font-semibold mb-2 ${
-                        isDark ? 'text-slate-100' : 'text-gray-800'
-                    }`}>
-                        {t('dosageSummary') || 'Dosage Summary'}
-                    </Text>
-                    <Text className={`text-sm ${
-                        isDark ? 'text-slate-400' : 'text-gray-500'
-                    }`}>
-                        {formData.intakeSchedules.length} {formData.intakeSchedules.length === 1 ? 'time' : 'times'} per day
-                    </Text>
-                    <Text className={`text-sm ${
-                        isDark ? 'text-slate-400' : 'text-gray-500'
-                    }`}>
-                        Total daily amount: {formData.intakeSchedules.reduce((sum, schedule) => sum + schedule.amount, 0)}
-                    </Text>
+            {allowCustomTimes && (
+                <View className="mb-6">
+                    {!showCustomTimeInput ? (
+                        <TouchableOpacity
+                            onPress={() => {
+                                Haptics.selectionAsync();
+                                setShowCustomTimeInput(true);
+                            }}
+                            className="flex-row items-center justify-center p-4 rounded-2xl border"
+                            style={{
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                            }}
+                            activeOpacity={0.8}
+                        >
+                            <View
+                                className="w-8 h-8 rounded-full items-center justify-center mr-2"
+                                style={{ backgroundColor: theme.surface }}
+                            >
+                                <Plus size={18} color={theme.textSecondary} />
+                            </View>
+                            <Text
+                                className="font-medium"
+                                style={{ color: theme.text }}
+                            >
+                                {t('addCustomTime')}
+                            </Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <View
+                            className="p-5 rounded-2xl border"
+                            style={{
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                            }}
+                        >
+                            <Text
+                                className="text-lg font-semibold mb-3"
+                                style={{ color: theme.text }}
+                            >
+                                {t('addMedicationTime')}
+                            </Text>
+
+                            <View className="space-y-5">
+                                <View>
+                                    <Text
+                                        className="text-sm font-medium mb-2"
+                                        style={{ color: theme.text }}
+                                    >
+                                        {t('timeLabel')}
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setTimePickerMode('new');
+                                            setShowTimePicker(true);
+                                        }}
+                                        className="px-4 py-3 rounded-lg border"
+                                        style={{
+                                            borderColor: theme.border,
+                                            backgroundColor: theme.surface,
+                                        }}
+                                    >
+                                        <Text
+                                            className="text-base"
+                                            style={{ color: theme.text }}
+                                        >
+                                            {formatTime12Hour(customTime)}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                <View>
+                                    <Text
+                                        className="text-sm font-medium mb-2"
+                                        style={{ color: theme.text }}
+                                    >
+                                        {t('amountDoses')}
+                                    </Text>
+                                    <TextInput
+                                        value={customAmount}
+                                        onChangeText={setCustomAmount}
+                                        placeholder="1"
+                                        keyboardType="numeric"
+                                        className="text-base px-4 py-3 rounded-lg border"
+                                        style={{
+                                            color: theme.text,
+                                            backgroundColor: theme.card,
+                                            borderColor: theme.border,
+                                        }}
+                                        placeholderTextColor={theme.textSecondary}
+                                    />
+                                </View>
+
+                                <View className="flex-row space-x-3">
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            Haptics.selectionAsync();
+                                            setShowCustomTimeInput(false);
+                                            setCustomTime('08:00');
+                                            setCustomAmount('1');
+                                        }}
+                                        className="flex-1 py-3 rounded-lg border"
+                                        style={{
+                                            borderColor: theme.border,
+                                            backgroundColor: theme.surface,
+                                        }}
+                                    >
+                                        <Text
+                                            className="text-center font-medium"
+                                            style={{ color: theme.text }}
+                                        >
+                                            {t('cancel')}
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={addCustomSchedule}
+                                        className="flex-1 py-3 rounded-lg"
+                                        style={{ backgroundColor: theme.primary }}
+                                    >
+                                        <Text
+                                            className="text-center font-medium"
+                                            style={{ color: theme.card }}
+                                        >
+                                            {t('addTime')}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    )}
                 </View>
-            </ScrollView>
+            )}
 
-            {/* Help Text */}
-            <View className={`mt-6 p-4 rounded-xl ${
-                isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'
-            }`}>
-                <Text className={`text-sm ${
-                    isDark ? 'text-blue-300' : 'text-blue-700'
-                }`}>
-                    💡 {t('dosageTip') || 'Tip: Set exact times and amounts as prescribed by your doctor'}
+            <View className="mb-6">
+                <Text
+                    className="text-lg font-semibold mb-3"
+                    style={{ color: theme.text }}
+                >
+                    {t('quickSetup')}
                 </Text>
+
+                <View className="flex-row flex-wrap justify-between gap-3">
+                    {frequencyPresets.map((preset, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            onPress={() => applyPreset(preset)}
+                            className="w-[48%] p-4 rounded-xl border"
+                            style={{
+                                backgroundColor: theme.card,
+                                borderColor: theme.border,
+                            }}
+                            activeOpacity={0.8}
+                        >
+                            <Text
+                                className="font-medium text-center"
+                                style={{ color: theme.text }}
+                            >
+                                {preset.label}
+                            </Text>
+                            <Text
+                                className="text-xs text-center mt-1"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {preset.description}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
             </View>
-        </View>
+
+            <View
+                className="p-4 rounded-2xl border"
+                style={{
+                    backgroundColor: theme.primary + '22',
+                    borderColor: theme.primary + '33'
+                }}
+            >
+                <View className="flex-row items-start">
+                    <AlertCircle size={16} color={theme.primary} className="mt-0.5 mr-2" />
+                    <View className="flex-1">
+                        <Text
+                            className="text-sm font-medium mb-1"
+                            style={{ color: theme.primary }}
+                        >
+                            {t('tipsForSettingTimes')}
+                        </Text>
+                        <Text
+                            className="text-xs leading-relaxed"
+                            style={{ color: theme.primary }}
+                        >
+                            {t('dosageTips')}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+            {showTimePicker && (
+                <DateTimePicker
+                    value={new Date()}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'clock'}
+                    onChange={handleTimeChange}
+                    is24Hour={false}
+                    themeVariant={isDark ? 'dark' : 'light'}
+                />
+            )}
+        </ScrollView>
     );
 };
 

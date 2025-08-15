@@ -19,7 +19,6 @@ export class AiWarningService {
             return warnings;
         } catch (error) {
             if (useCache) {
-                console.log('Using cached warnings due to network error');
                 return await AiWarningStorageService.getStoredAllWarnings(userId);
             }
             throw error;

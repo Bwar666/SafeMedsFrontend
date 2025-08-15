@@ -4,23 +4,29 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
-import { UserStorageService } from '../services/user/UserService';
-import { AiWarningResponse } from '../services/ai/AiWarningService';
 import OnboardingScreen from '../screens/OnboardingScreen';
-import ProfileCreationScreen from '../screens/ProfileCreationScreen';
+import ProfileCreationScreen from '../screens/user/ProfileCreationScreen';
 import MainTabNavigator from './MainTabNavigator';
-import AddMedicineScreen from '../screens/AddMedicineScreen';
-import MedicineDetailScreen from '../screens/MedicineDetailScreen';
-import EditMedicineScreen from '../screens/EditMedicineScreen';
-import AIWarningDetailScreen from '../screens/AIWarningDetailScreen';
+import AddMedicineScreen from '../screens/medicine/AddMedicineScreen';
+import MedicineDetailScreen from '../screens/medicine/MedicineDetailScreen';
+import EditMedicineScreen from '../screens/medicine/EditMedicineScreen';
+import AIWarningDetailScreen from '../screens/ai/AIWarningDetailScreen';
+import ProfileManagementScreenScreen from '../screens/user/ProfileManagementScreen';
+import AllergyManagementScreen from '../screens/allergy/AllergyManagementScreen';
+import { AiWarningResponse } from "@/app/services/ai";
+import {UserStorageService} from "@/app/services/user";
 
 
 // Updated Navigation Types
 export type RootStackParamList = {
     Onboarding: undefined;
     ProfileCreation: undefined;
-    HomeTab: undefined;
+    HomeTab: {
+        dateTitle?: string;
+    };
     AddMedicine: undefined;
+    Profile: undefined;
+    AllergyManagement: undefined;
     MedicineDetail: {
         medicineId: string;
     };
@@ -97,38 +103,9 @@ const AppNavigator: React.FC = () => {
             setTimeout(() => setIsLoading(false), 1000);
         }
     };
-
-    const resetAppData = async (): Promise<void> => {
-        try {
-            console.log('🔄 Resetting app data...');
-
-            await Promise.all([
-                AsyncStorage.removeItem('onboarding_completed'),
-                UserStorageService.clearUserData(),
-            ]);
-
-            // Restart initialization
-            setIsLoading(true);
-            setInitialRoute(null);
-            await initializeApp();
-        } catch (error) {
-            console.error('Reset error:', error);
-        }
-    };
-
     const screenOptions = {
         headerShown: false,
-        gestureEnabled: true,
-        cardStyleInterpolator: ({ current, layouts }: any) => ({
-            cardStyle: {
-                transform: [{
-                    translateX: current.progress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [layouts.screen.width, 0],
-                    }),
-                }],
-            },
-        }),
+        gestureEnabled: false, // Disable gestures by default
     };
 
     if (isLoading || !initialRoute) {
@@ -141,88 +118,50 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
                 name="Onboarding"
                 component={OnboardingScreen}
-                options={{ gestureEnabled: false }}
+                options={{ gestureEnabled: true }} // Enable only for onboarding
             />
             <Stack.Screen
                 name="ProfileCreation"
                 component={ProfileCreationScreen}
-                options={{ gestureEnabled: true }}
+                options={{ gestureEnabled: true }} // Enable only for profile creation
             />
 
             {/* Main App */}
             <Stack.Screen
                 name="HomeTab"
                 component={MainTabNavigator}
-                options={{ gestureEnabled: false }}
             />
-
-            {/* Modal Screens */}
             <Stack.Screen
                 name="AddMedicine"
                 component={AddMedicineScreen}
-                options={{
-                    headerShown: false,
-                    presentation: 'modal',
-                    gestureEnabled: true,
-                }}
+                options={{ animation: "fade_from_bottom"}}
             />
-
-            {/* Detail Screens */}
+            <Stack.Screen
+                name="Profile"
+                component={ProfileManagementScreenScreen}
+                options={{ animation: "fade"}}
+            />
+            <Stack.Screen
+                name="AllergyManagement"
+                component={AllergyManagementScreen}
+                options={{ animation: "fade"}}
+            />
             <Stack.Screen
                 name="MedicineDetail"
                 component={MedicineDetailScreen}
-                options={{
-                    headerShown: false,
-                    gestureEnabled: true,
-                    cardStyleInterpolator: ({ current, layouts }) => ({
-                        cardStyle: {
-                            transform: [{
-                                translateX: current.progress.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [layouts.screen.width, 0],
-                                }),
-                            }],
-                        },
-                    }),
-                }}
-            />
+                options={{ animation: "fade_from_bottom"}}
 
+            />
             <Stack.Screen
                 name="EditMedicine"
                 component={EditMedicineScreen}
-                options={{
-                    headerShown: false,
-                    gestureEnabled: true,
-                    cardStyleInterpolator: ({ current, layouts }) => ({
-                        cardStyle: {
-                            transform: [{
-                                translateX: current.progress.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [layouts.screen.width, 0],
-                                }),
-                            }],
-                        },
-                    }),
-                }}
+                options={{ animation: "fade_from_bottom"}}
             />
-
             <Stack.Screen
                 name="AIWarningDetail"
                 component={AIWarningDetailScreen}
-                options={{
-                    headerShown: false,
-                    gestureEnabled: true,
-                    cardStyleInterpolator: ({ current, layouts }) => ({
-                        cardStyle: {
-                            transform: [{
-                                translateX: current.progress.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [layouts.screen.width, 0],
-                                }),
-                            }],
-                        },
-                    }),
-                }}
+                options={{ animation: "fade_from_bottom"}}
+
             />
         </Stack.Navigator>
     );

@@ -11,6 +11,7 @@ interface ThemeColors {
     surface: string;
     primary: string;
     primaryDark: string;
+    primaryLight: string,
     secondary: string;
     text: string;
     textSecondary: string;
@@ -27,6 +28,7 @@ const lightTheme: ThemeColors = {
     surface: '#F3F4F6',         // bg-gray-100
     primary: '#6366F1',         // bg-indigo-500
     primaryDark: '#4F46E5',     // bg-indigo-600
+    primaryLight: '#C7D2FE',
     secondary: '#8B5CF6',       // bg-purple-500
     text: '#1F2937',            // text-gray-800
     textSecondary: '#6B7280',   // text-gray-500
@@ -43,6 +45,7 @@ const darkTheme: ThemeColors = {
     surface: '#1E293B',         // bg-slate-800
     primary: '#6366F1',         // bg-indigo-500
     primaryDark: '#4F46E5',     // bg-indigo-600
+    primaryLight: '#3730A3',
     secondary: '#8B5CF6',       // bg-purple-500
     text: '#F8FAFC',            // text-slate-100
     textSecondary: '#CBD5E1',   // text-slate-300
@@ -52,6 +55,25 @@ const darkTheme: ThemeColors = {
     error: '#EF4444',           // bg-red-500
     card: '#1E293B',            // bg-slate-800
 };
+
+// // SafeMed custom colors - Dark theme
+// const darkTheme: ThemeColors = {
+//     background: '#FFFFFF',      // bg-slate-900
+//     surface: '#FFFFFF',         // bg-slate-800
+//     primary: '#FFFFFF',         // bg-indigo-500
+//     primaryDark: '#FFFFFF',     // bg-indigo-600
+//     primaryLight: '#FFFFFF',
+//     secondary: '#FFFFFF',       // bg-purple-500
+//     text: '#FFFFFF',            // text-slate-100
+//     textSecondary: '#FFFFFF',   // text-slate-300
+//     border: '#FFFFFF',          // border-slate-600
+//     success: '#FFFFFF',         // bg-emerald-500
+//     warning: '#FFFFFF',         // bg-amber-500
+//     error: '#FFFFFF',           // bg-red-500
+//     card: '#1E293B',            // bg-slate-800
+// };
+
+
 
 // Define the context value interface
 interface ThemeContextValue {

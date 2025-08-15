@@ -1,4 +1,6 @@
 // medicineUsageTypes.ts
+import {FoodInstruction, IntakeSchedule, MedicineForm} from "@/app/services/medicine/medicine/MedicineServiceTypes";
+
 export interface TakeMedicineRequest {
     intakeEventId: string;
     actualTakeTime?: string; // ISO datetime string
@@ -12,13 +14,6 @@ export interface SkipMedicineRequest {
     skipReason: string;
     note?: string;
 }
-
-export interface PauseMedicineRequest {
-    pauseReason: string;
-    resumeAt?: string; // ISO datetime string
-    pauseNotifications?: boolean;
-}
-
 export interface MedicineUsageResponse {
     intakeEventId: string;
     medicineId: string;
@@ -41,6 +36,8 @@ export interface IntakeEvent {
     medicineName: string;
     medicineIcon?: string;
     medicineColor?: string;
+    medicineForm: MedicineForm;
+    foodInstruction?: FoodInstruction;
     scheduledDateTime: string;
     actualDateTime?: string;
     status: IntakeStatus;
@@ -75,7 +72,7 @@ export interface MedicineResponse {
     form: string;
     conditionReason?: string;
     frequencyType: string;
-    intakeTimes: string[];
+    intakeSchedules: IntakeSchedule[];
     scheduleDuration?: number;
     refillReminderThreshold?: number;
     foodInstruction?: string;
@@ -90,7 +87,8 @@ export enum IntakeStatus {
     SCHEDULED = 'SCHEDULED',
     TAKEN = 'TAKEN',
     MISSED = 'MISSED',
-    SKIPPED = 'SKIPPED'
+    SKIPPED = 'SKIPPED',
+    PAUSED = 'PAUSED',
 }
 
 export interface ApiError {

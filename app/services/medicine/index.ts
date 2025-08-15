@@ -7,4 +7,4 @@ export { medicineMaintenanceService } from './maintenance/MedicineMaintenanceSer
 export type {
     MedicineRequest,
     MedicineResponse,
-} from './medicine/MedicineService';
+} from './medicine/MedicineServiceTypes';

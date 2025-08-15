@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput } from 'react-native';
-import {DayOfWeek, FrequencyConfig, FrequencyType} from "@/app/services/medicine/medicine/MedicineServiceTypes";
+import { View, Text, TouchableOpacity, ScrollView, TextInput, StyleSheet } from 'react-native';
+import { DayOfWeek, FrequencyConfig, FrequencyType } from "@/app/services/medicine/medicine/MedicineServiceTypes";
+import { useLanguage } from "@/app/context/LanguageContext";
+import {useTheme} from "@/app/context/ThemeContext";
 
 interface FormData {
     frequencyType: FrequencyType | null;
@@ -11,86 +13,104 @@ interface FormData {
 interface FrequencyStepProps {
     formData: FormData;
     updateFormData: (updates: Partial<FormData>) => void;
-    isDark: boolean;
-    t: (key: string) => string; // Changed from strict typing to generic string
-    isRTL: boolean;
 }
 
 const FrequencyStep: React.FC<FrequencyStepProps> = ({
                                                          formData,
                                                          updateFormData,
-                                                         isDark,
-                                                         t,
-                                                         isRTL,
                                                      }) => {
+    const { theme, isDark } = useTheme();
+    const { t, isRTL } = useLanguage();
+    const [expandedOption, setExpandedOption] = useState<FrequencyType | null>(null);
+
     const frequencyOptions = [
         {
             value: FrequencyType.DAILY,
-            label: t('daily') || 'Daily',
+            label: t('daily'),
             icon: '📅',
-            description: 'Every day'
+            description: t('dailyDescription'),
+            hasConfig: false
         },
         {
             value: FrequencyType.EVERY_OTHER_DAY,
-            label: t('everyOtherDay') || 'Every Other Day',
+            label: t('everyOtherDay'),
             icon: '📆',
-            description: 'Every 2 days'
+            description: t('everyOtherDayDescription'),
+            hasConfig: false
         },
         {
             value: FrequencyType.SPECIFIC_DAYS_OF_WEEK,
-            label: t('specificDays') || 'Specific Days',
+            label: t('specificDays'),
             icon: '🗓️',
-            description: 'Choose specific days'
+            description: t('specificDaysDescription'),
+            hasConfig: true
         },
         {
             value: FrequencyType.EVERY_X_DAYS,
-            label: t('everyXDays') || 'Every X Days',
+            label: t('everyXDays'),
             icon: '⏰',
-            description: 'Custom interval'
+            description: t('everyXDaysDescription'),
+            hasConfig: true
         },
         {
             value: FrequencyType.EVERY_X_WEEKS,
-            label: t('everyXWeeks') || 'Every X Weeks',
+            label: t('everyXWeeks'),
             icon: '📋',
-            description: 'Weekly interval'
+            description: t('everyXWeeksDescription'),
+            hasConfig: true
         },
         {
             value: FrequencyType.EVERY_X_MONTHS,
-            label: t('everyXMonths') || 'Every X Months',
+            label: t('everyXMonths'),
             icon: '🗓️',
-            description: 'Monthly interval'
+            description: t('everyXMonthsDescription'),
+            hasConfig: true
         },
         {
             value: FrequencyType.CYCLE_BASED,
-            label: t('cycleBased') || 'Cycle Based',
+            label: t('cycleBased'),
             icon: '🔄',
-            description: 'X days on, Y days off'
+            description: t('cycleBasedDescription'),
+            hasConfig: true
         },
     ];
 
     const daysOfWeek = [
-        { value: DayOfWeek.MONDAY, label: t('monday') || 'Mon', fullLabel: 'Monday' },
-        { value: DayOfWeek.TUESDAY, label: t('tuesday') || 'Tue', fullLabel: 'Tuesday' },
-        { value: DayOfWeek.WEDNESDAY, label: t('wednesday') || 'Wed', fullLabel: 'Wednesday' },
-        { value: DayOfWeek.THURSDAY, label: t('thursday') || 'Thu', fullLabel: 'Thursday' },
-        { value: DayOfWeek.FRIDAY, label: t('friday') || 'Fri', fullLabel: 'Friday' },
-        { value: DayOfWeek.SATURDAY, label: t('saturday') || 'Sat', fullLabel: 'Saturday' },
-        { value: DayOfWeek.SUNDAY, label: t('sunday') || 'Sun', fullLabel: 'Sunday' },
+        { value: DayOfWeek.MONDAY, label: t('monday') },
+        { value: DayOfWeek.TUESDAY, label: t('tuesday') },
+        { value: DayOfWeek.WEDNESDAY, label: t('wednesday') },
+        { value: DayOfWeek.THURSDAY, label: t('thursday') },
+        { value: DayOfWeek.FRIDAY, label: t('friday') },
+        { value: DayOfWeek.SATURDAY, label: t('saturday') },
+        { value: DayOfWeek.SUNDAY, label: t('sunday') },
     ];
 
     const selectFrequency = (frequencyType: FrequencyType) => {
-        const newConfig: FrequencyConfig = {
-            intervalDays: 1,
-            specificDays: [],
-            cycleActiveDays: 0,
-            cycleRestDays: 0,
-            dayOfMonth: 1,
-        };
+        if (formData.frequencyType !== frequencyType) {
+            const newConfig: FrequencyConfig = {
+                intervalDays: 0,
+                specificDays: [],
+                cycleActiveDays: 0,
+                cycleRestDays: 0,
+            };
 
-        updateFormData({
-            frequencyType,
-            frequencyConfig: newConfig
-        });
+            if (frequencyType === FrequencyType.EVERY_X_WEEKS) {
+                newConfig.intervalDays = 1;
+            } else if (frequencyType === FrequencyType.EVERY_X_MONTHS) {
+                newConfig.intervalDays = 30;
+            }
+
+            updateFormData({
+                frequencyType,
+                frequencyConfig: newConfig
+            });
+        }
+
+        if (expandedOption === frequencyType) {
+            setExpandedOption(null);
+        } else {
+            setExpandedOption(frequencyType);
+        }
     };
 
     const toggleDay = (day: DayOfWeek) => {
@@ -108,6 +128,16 @@ const FrequencyStep: React.FC<FrequencyStepProps> = ({
     };
 
     const updateIntervalDays = (days: string) => {
+        if (days === '') {
+            updateFormData({
+                frequencyConfig: {
+                    ...formData.frequencyConfig,
+                    intervalDays: 0
+                }
+            });
+            return;
+        }
+
         const intervalDays = parseInt(days) || 1;
         updateFormData({
             frequencyConfig: {
@@ -117,7 +147,57 @@ const FrequencyStep: React.FC<FrequencyStepProps> = ({
         });
     };
 
+    const updateIntervalWeeks = (weeks: string) => {
+        if (weeks === '') {
+            updateFormData({
+                frequencyConfig: {
+                    ...formData.frequencyConfig,
+                    intervalDays: 0
+                }
+            });
+            return;
+        }
+
+        const weeksValue = parseInt(weeks) || 1;
+        updateFormData({
+            frequencyConfig: {
+                ...formData.frequencyConfig,
+                intervalDays: weeksValue * 7
+            }
+        });
+    };
+
+    const updateIntervalMonths = (months: string) => {
+        if (months === '') {
+            updateFormData({
+                frequencyConfig: {
+                    ...formData.frequencyConfig,
+                    intervalDays: 0
+                }
+            });
+            return;
+        }
+
+        const monthsValue = parseInt(months) || 1;
+        updateFormData({
+            frequencyConfig: {
+                ...formData.frequencyConfig,
+                intervalDays: monthsValue * 30
+            }
+        });
+    };
+
     const updateCycleConfig = (field: 'cycleActiveDays' | 'cycleRestDays', value: string) => {
+        if (value === '') {
+            updateFormData({
+                frequencyConfig: {
+                    ...formData.frequencyConfig,
+                    [field]: 0
+                }
+            });
+            return;
+        }
+
         const numValue = parseInt(value) || 0;
         updateFormData({
             frequencyConfig: {
@@ -127,64 +207,181 @@ const FrequencyStep: React.FC<FrequencyStepProps> = ({
         });
     };
 
-    const renderFrequencyConfig = () => {
-        switch (formData.frequencyType) {
+    const renderConfigSection = (option: FrequencyType) => {
+        switch (option) {
             case FrequencyType.SPECIFIC_DAYS_OF_WEEK:
+
                 return (
-                    <View className="mt-6">
-                        <Text className={`text-sm font-medium mb-3 ${
-                            isDark ? 'text-slate-200' : 'text-gray-700'
-                        }`}>
-                            {t('selectDays') || 'Select Days'}
+                    <View
+                        className="mt-3 p-4 rounded-xl"
+                        style={{ backgroundColor: theme.surface }}
+                    >
+                        <Text
+                            className="text-base font-medium mb-4"
+                            style={{ color: theme.text }}
+                        >
+                            {t('selectDays')}
                         </Text>
-                        <View className="flex-row flex-wrap gap-2">
-                            {daysOfWeek.map((day) => (
-                                <TouchableOpacity
-                                    key={day.value}
-                                    onPress={() => toggleDay(day.value)}
-                                    className={`px-4 py-3 rounded-xl border ${
-                                        formData.frequencyConfig.specificDays?.includes(day.value)
-                                            ? 'border-indigo-500 border-2 bg-indigo-500/10'
-                                            : isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                                    }`}
-                                    activeOpacity={0.7}
-                                >
-                                    <Text className={`text-sm font-medium ${
-                                        formData.frequencyConfig.specificDays?.includes(day.value)
-                                            ? 'text-indigo-500'
-                                            : isDark ? 'text-slate-200' : 'text-gray-700'
-                                    }`}>
-                                        {day.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                        <View className="flex-row flex-wrap gap-2.5 justify-center">
+                            {daysOfWeek.map((day) => {
+                                const isSelected = formData.frequencyConfig.specificDays?.includes(day.value);
+                                return (
+                                    <TouchableOpacity
+                                        key={day.value}
+                                        onPress={() => toggleDay(day.value)}
+                                        className="w-14 h-14 rounded-full items-center justify-center"
+                                        style={{
+                                            backgroundColor: isSelected
+                                                ? theme.primary
+                                                : theme.card,
+                                            borderWidth: isSelected ? 0 : 1,
+                                            borderColor: theme.border,
+                                        }}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Text
+                                            className="font-medium text-center"
+                                            style={{
+                                                color: isSelected ? theme.card : theme.text
+                                            }}
+                                        >
+                                            {day.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </View>
                     </View>
                 );
 
             case FrequencyType.EVERY_X_DAYS:
                 return (
-                    <View className="mt-6">
-                        <Text className={`text-sm font-medium mb-3 ${
-                            isDark ? 'text-slate-200' : 'text-gray-700'
-                        }`}>
-                            {t('intervalDays') || 'Every how many days?'}
+                    <View
+                        className="mt-3 p-4 rounded-xl"
+                        style={{ backgroundColor: theme.surface }}
+                    >
+                        <Text
+                            className="text-base font-medium mb-3"
+                            style={{ color: theme.text }}
+                        >
+                            {t('intervalDays')}
                         </Text>
-                        <View className="flex-row items-center">
-                            <Text className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                Every
+                        <View className="flex-row items-center justify-between">
+                            <Text
+                                className="text-base"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {t('every')}
                             </Text>
                             <TextInput
-                                value={formData.frequencyConfig.intervalDays?.toString() || '1'}
+                                value={formData.frequencyConfig.intervalDays?.toString() || ''}
                                 onChangeText={updateIntervalDays}
-                                className={`mx-3 px-3 py-2 rounded-lg border w-16 text-center ${
-                                    isDark ? 'bg-slate-800 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
-                                }`}
-                                keyboardType="numeric"
-                                maxLength={2}
+                                className="px-4 py-3 rounded-xl border text-center w-24"
+                                style={{
+                                    backgroundColor: theme.card,
+                                    borderColor: theme.border,
+                                    color: theme.text,
+                                }}
+                                keyboardType="number-pad"
+                                maxLength={3}
+                                placeholder="1"
+                                placeholderTextColor={theme.textSecondary}
                             />
-                            <Text className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                days
+                            <Text
+                                className="text-base"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {t('days')}
+                            </Text>
+                        </View>
+                    </View>
+                );
+
+            case FrequencyType.EVERY_X_WEEKS:
+                return (
+                    <View
+                        className="mt-3 p-4 rounded-xl"
+                        style={{ backgroundColor: theme.surface }}
+                    >
+                        <Text
+                            className="text-base font-medium mb-3"
+                            style={{ color: theme.text }}
+                        >
+                            {t('setWeeklyInterval')}
+                        </Text>
+                        <View className="flex-row items-center justify-between">
+                            <Text
+                                className="text-base"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {t('every')}
+                            </Text>
+                            <TextInput
+                                value={formData.frequencyConfig.intervalDays
+                                    ? Math.floor(formData.frequencyConfig.intervalDays / 7).toString()
+                                    : ''}
+                                onChangeText={updateIntervalWeeks}
+                                className="px-4 py-3 rounded-xl border text-center w-24"
+                                style={{
+                                    backgroundColor: theme.card,
+                                    borderColor: theme.border,
+                                    color: theme.text,
+                                }}
+                                keyboardType="number-pad"
+                                maxLength={2}
+                                placeholder="1"
+                                placeholderTextColor={theme.textSecondary}
+                            />
+                            <Text
+                                className="text-base"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {t('weeks')}
+                            </Text>
+                        </View>
+                    </View>
+                );
+
+            case FrequencyType.EVERY_X_MONTHS:
+                return (
+                    <View
+                        className="mt-3 p-4 rounded-xl"
+                        style={{ backgroundColor: theme.surface }}
+                    >
+                        <Text
+                            className="text-base font-medium mb-3"
+                            style={{ color: theme.text }}
+                        >
+                            {t('setMonthlyInterval')}
+                        </Text>
+                        <View className="flex-row items-center justify-between">
+                            <Text
+                                className="text-base"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {t('every')}
+                            </Text>
+                            <TextInput
+                                value={formData.frequencyConfig.intervalDays
+                                    ? Math.floor(formData.frequencyConfig.intervalDays / 30).toString()
+                                    : ''}
+                                onChangeText={updateIntervalMonths}
+                                className="px-4 py-3 rounded-xl border text-center w-24"
+                                style={{
+                                    backgroundColor: theme.card,
+                                    borderColor: theme.border,
+                                    color: theme.text,
+                                }}
+                                keyboardType="number-pad"
+                                maxLength={2}
+                                placeholder="1"
+                                placeholderTextColor={theme.textSecondary}
+                            />
+                            <Text
+                                className="text-base"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {t('months')}
                             </Text>
                         </View>
                     </View>
@@ -192,40 +389,60 @@ const FrequencyStep: React.FC<FrequencyStepProps> = ({
 
             case FrequencyType.CYCLE_BASED:
                 return (
-                    <View className="mt-6">
-                        <Text className={`text-sm font-medium mb-3 ${
-                            isDark ? 'text-slate-200' : 'text-gray-700'
-                        }`}>
-                            {t('cycleConfig') || 'Cycle Configuration'}
+                    <View
+                        className="mt-3 p-4 rounded-xl"
+                        style={{ backgroundColor: theme.surface }}
+                    >
+                        <Text
+                            className="text-base font-medium mb-4"
+                            style={{ color: theme.text }}
+                        >
+                            {t('cycleConfig')}
                         </Text>
-                        <View className="space-y-4">
-                            <View className="flex-row items-center">
+                        <View className="flex-row justify-between">
+                            <View className="flex-1 mr-2">
+                                <Text
+                                    className="text-sm mb-2"
+                                    style={{ color: theme.textSecondary }}
+                                >
+                                    {t('daysActive')}
+                                </Text>
                                 <TextInput
-                                    value={formData.frequencyConfig.cycleActiveDays?.toString() || '0'}
+                                    value={formData.frequencyConfig.cycleActiveDays?.toString() || ''}
                                     onChangeText={(value) => updateCycleConfig('cycleActiveDays', value)}
-                                    className={`px-3 py-2 rounded-lg border w-16 text-center ${
-                                        isDark ? 'bg-slate-800 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
-                                    }`}
-                                    keyboardType="numeric"
+                                    className="px-4 py-3 rounded-xl border text-center"
+                                    style={{
+                                        backgroundColor: theme.card,
+                                        borderColor: theme.border,
+                                        color: theme.text,
+                                    }}
+                                    keyboardType="number-pad"
                                     maxLength={2}
+                                    placeholder="0"
+                                    placeholderTextColor={theme.textSecondary}
                                 />
-                                <Text className={`ml-3 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                    days active
-                                </Text>
                             </View>
-                            <View className="flex-row items-center">
-                                <TextInput
-                                    value={formData.frequencyConfig.cycleRestDays?.toString() || '0'}
-                                    onChangeText={(value) => updateCycleConfig('cycleRestDays', value)}
-                                    className={`px-3 py-2 rounded-lg border w-16 text-center ${
-                                        isDark ? 'bg-slate-800 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
-                                    }`}
-                                    keyboardType="numeric"
-                                    maxLength={2}
-                                />
-                                <Text className={`ml-3 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                    days rest
+                            <View className="flex-1 ml-2">
+                                <Text
+                                    className="text-sm mb-2"
+                                    style={{ color: theme.textSecondary }}
+                                >
+                                    {t('daysRest')}
                                 </Text>
+                                <TextInput
+                                    value={formData.frequencyConfig.cycleRestDays?.toString() || ''}
+                                    onChangeText={(value) => updateCycleConfig('cycleRestDays', value)}
+                                    className="px-4 py-3 rounded-xl border text-center"
+                                    style={{
+                                        backgroundColor: theme.card,
+                                        borderColor: theme.border,
+                                        color: theme.text,
+                                    }}
+                                    keyboardType="number-pad"
+                                    maxLength={2}
+                                    placeholder="0"
+                                    placeholderTextColor={theme.textSecondary}
+                                />
                             </View>
                         </View>
                     </View>
@@ -236,91 +453,135 @@ const FrequencyStep: React.FC<FrequencyStepProps> = ({
         }
     };
 
+    const styles = StyleSheet.create({
+        optionContainer: {
+            borderRadius: 14,
+            padding: 16,
+            marginBottom: 12,
+            borderWidth: 1,
+            borderColor: theme.border,
+            backgroundColor: theme.card,
+        },
+        selectedOption: {
+            borderColor: theme.primary,
+            borderWidth: 2,
+            backgroundColor: theme.primaryLight,
+        },
+        optionTitle: {
+            fontSize: 17,
+            fontWeight: '600',
+            color: theme.text,
+        },
+        selectedTitle: {
+            color: theme.primary,
+        },
+        optionDescription: {
+            fontSize: 14,
+            marginTop: 6,
+            color: theme.textSecondary,
+        },
+    });
+
     return (
-        <View className="flex-1 p-5">
-            {/* Header */}
+        <View
+            className="flex-1 p-5"
+            style={{
+                backgroundColor: theme.background,
+            }}
+        >
             <View className="mb-6">
-                <Text className={`text-2xl font-bold text-center mb-2 ${
-                    isDark ? 'text-slate-100' : 'text-gray-800'
-                }`}>
-                    {t('frequency') || 'Frequency'}
+                <Text
+                    className="text-2xl font-bold text-center mb-2"
+                    style={{ color: theme.text }}
+                >
+                    {t('frequency')}
                 </Text>
-                <Text className={`text-base text-center ${
-                    isDark ? 'text-slate-300' : 'text-gray-500'
-                }`}>
-                    {t('frequencyDescription') || 'How often do you take this medicine?'}
+                <Text
+                    className="text-base text-center px-2"
+                    style={{ color: theme.textSecondary }}
+                >
+                    {t('frequencyDescription')}
                 </Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Frequency Options */}
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                className="pb-4"
+                keyboardShouldPersistTaps="handled"
+            >
                 <View className="space-y-3">
                     {frequencyOptions.map((option) => (
-                        <TouchableOpacity
-                            key={option.value}
-                            onPress={() => selectFrequency(option.value)}
-                            className={`p-4 rounded-xl border ${
-                                formData.frequencyType === option.value
-                                    ? 'border-indigo-500 border-2 bg-indigo-500/10'
-                                    : isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                            }`}
-                            activeOpacity={0.7}
-                        >
-                            <View className="flex-row items-center">
-                                <Text className="text-2xl mr-3">{option.icon}</Text>
-                                <View className="flex-1">
-                                    <Text className={`font-semibold ${
-                                        formData.frequencyType === option.value
-                                            ? 'text-indigo-500'
-                                            : isDark ? 'text-slate-100' : 'text-gray-800'
-                                    }`}>
-                                        {option.label}
-                                    </Text>
-                                    <Text className={`text-sm ${
-                                        isDark ? 'text-slate-400' : 'text-gray-500'
-                                    }`}>
-                                        {option.description}
-                                    </Text>
+                        <View key={option.value}>
+                            <TouchableOpacity
+                                onPress={() => selectFrequency(option.value)}
+                                style={[
+                                    styles.optionContainer,
+                                    formData.frequencyType === option.value && styles.selectedOption
+                                ]}
+                                activeOpacity={0.7}
+                            >
+                                <View className="flex-row items-center">
+                                    <Text className="text-2xl mr-3">{option.icon}</Text>
+                                    <View className="flex-1">
+                                        <Text style={[
+                                            styles.optionTitle,
+                                            formData.frequencyType === option.value && styles.selectedTitle
+                                        ]}>
+                                            {option.label}
+                                        </Text>
+                                        <Text style={styles.optionDescription}>
+                                            {option.description}
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
-                        </TouchableOpacity>
+                            </TouchableOpacity>
+
+                            {formData.frequencyType === option.value && expandedOption === option.value && (
+                                <View className="mt-2">
+                                    {renderConfigSection(option.value)}
+                                </View>
+                            )}
+                        </View>
                     ))}
                 </View>
 
-                {/* Frequency Configuration */}
-                {renderFrequencyConfig()}
-
-                {/* Selected Frequency Summary */}
                 {formData.frequencyType && (
-                    <View className={`p-4 rounded-xl mt-6 ${
-                        isDark ? 'bg-slate-800' : 'bg-gray-50'
-                    }`}>
-                        <Text className={`font-semibold mb-2 ${
-                            isDark ? 'text-slate-100' : 'text-gray-800'
-                        }`}>
-                            {t('frequencySummary') || 'Frequency Summary'}
+                    <View
+                        className="p-4 rounded-xl mt-6"
+                        style={{ backgroundColor: theme.surface }}
+                    >
+                        <Text
+                            className="font-semibold mb-2"
+                            style={{ color: theme.text }}
+                        >
+                            {t('frequencySummary')}
                         </Text>
-                        <Text className={`text-sm ${
-                            isDark ? 'text-slate-400' : 'text-gray-500'
-                        }`}>
+                        <Text
+                            className="text-base"
+                            style={{ color: theme.textSecondary }}
+                        >
                             {frequencyOptions.find(opt => opt.value === formData.frequencyType)?.label}
                             {formData.frequencyType === FrequencyType.SPECIFIC_DAYS_OF_WEEK &&
                                 (formData.frequencyConfig.specificDays?.length || 0) > 0 && (
-                                    ` - ${formData.frequencyConfig.specificDays?.length || 0} days selected`
+                                    ` - ${formData.frequencyConfig.specificDays?.length || 0} ${t('daysSelected')}`
                                 )}
                         </Text>
                     </View>
                 )}
             </ScrollView>
 
-            {/* Help Text */}
-            <View className={`mt-6 p-4 rounded-xl ${
-                isDark ? 'bg-orange-500/10 border border-orange-500/20' : 'bg-orange-50 border border-orange-200'
-            }`}>
-                <Text className={`text-sm ${
-                    isDark ? 'text-orange-300' : 'text-orange-700'
-                }`}>
-                    💡 {t('frequencyTip') || 'Tip: Choose the frequency that matches your doctor\'s prescription exactly'}
+            <View
+                className="mt-4 p-4 rounded-xl border"
+                style={{
+                    backgroundColor: theme.warning + '22',
+                    borderColor: theme.warning + '33'
+                }}
+            >
+                <Text
+                    className="text-sm"
+                    style={{ color: theme.warning }}
+                >
+                    💡 {t('frequencyTip')}
                 </Text>
             </View>
         </View>

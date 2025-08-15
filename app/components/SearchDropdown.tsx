@@ -4,14 +4,16 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    FlatList,
+    ScrollView,
     ActivityIndicator,
     Animated,
     Keyboard,
 } from 'react-native';
 import { Search, X } from 'lucide-react-native';
-
-import { medicalSearchService, SearchCategory, SearchSuggestion } from '../services/search/MedicalSearchService';
+import { medicalSearchService} from '../services/search/MedicalSearchService';
+import {SearchCategory, SearchSuggestion} from "@/app/services/search/MedicalSearchTypes";
+import {useTheme} from "@/app/context/ThemeContext";
+import {useLanguage} from "@/app/context/LanguageContext";
 
 // Convert SearchSuggestion to SearchResult for component compatibility
 interface SearchResult {
@@ -26,8 +28,6 @@ interface SearchDropdownProps {
     onChangeText: (text: string) => void;
     placeholder: string;
     searchType: 'medicine' | 'condition';
-    isDark: boolean;
-    isRTL: boolean;
     onSelectResult?: (result: SearchResult) => void;
     disabled?: boolean;
 }
@@ -37,16 +37,18 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
                                                            onChangeText,
                                                            placeholder,
                                                            searchType,
-                                                           isDark,
-                                                           isRTL,
                                                            onSelectResult,
                                                            disabled = false,
                                                        }) => {
+    const { theme } = useTheme();
+    const { t, isRTL } = useLanguage();
+
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownAnimation = useRef(new Animated.Value(0)).current;
     const searchTimeoutRef = useRef<number | null>(null);
+
     // Convert SearchSuggestion to SearchResult
     const convertToSearchResult = (suggestion: SearchSuggestion): SearchResult => ({
         id: suggestion.value,
@@ -156,44 +158,26 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
         };
     }, []);
 
-    const renderSearchResult = ({ item }: { item: SearchResult }) => (
-        <TouchableOpacity
-            onPress={() => handleSelectResult(item)}
-            className={`p-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}
-            activeOpacity={0.7}
-        >
-            <Text className={`font-medium ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
-                {item.name}
-            </Text>
-            {item.description && (
-                <Text className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                    {item.description}
-                </Text>
-            )}
-            {item.category && (
-                <Text className={`text-xs mt-1 px-2 py-1 rounded-full self-start ${
-                    isDark ? 'bg-slate-700 text-slate-300' : 'bg-gray-100 text-gray-600'
-                }`}>
-                    {item.category}
-                </Text>
-            )}
-        </TouchableOpacity>
-    );
-
     return (
         <View className="relative">
             {/* Search Input */}
-            <View className={`flex-row items-center px-4 py-3 rounded-xl border ${
-                isDark ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-300'
-            } ${disabled ? 'opacity-50' : ''}`}>
-                <Search size={20} color={isDark ? '#94A3B8' : '#6B7280'} />
+            <View
+                style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    opacity: disabled ? 0.5 : 1
+                }}
+                className="flex-row items-center px-4 py-3 rounded-xl border"
+            >
+                <Search size={20} color={theme.textSecondary} />
 
                 <TextInput
                     value={value}
                     onChangeText={handleTextChange}
                     placeholder={placeholder}
-                    placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                    className={`flex-1 ml-3 text-base ${isDark ? 'text-slate-100' : 'text-gray-800'}`}
+                    placeholderTextColor={theme.textSecondary}
+                    style={{ color: theme.text }}
+                    className="flex-1 ml-3 text-base"
                     textAlign={isRTL ? 'right' : 'left'}
                     editable={!disabled}
                     autoCapitalize="words"
@@ -201,12 +185,12 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
                 />
 
                 {isSearching && (
-                    <ActivityIndicator size="small" color={isDark ? '#94A3B8' : '#6B7280'} />
+                    <ActivityIndicator size="small" color={theme.textSecondary} />
                 )}
 
                 {value.length > 0 && !isSearching && (
                     <TouchableOpacity onPress={clearSearch} className="p-1">
-                        <X size={16} color={isDark ? '#94A3B8' : '#6B7280'} />
+                        <X size={16} color={theme.textSecondary} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -230,20 +214,45 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
                             },
                         ],
                         opacity: dropdownAnimation,
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
                     }}
-                    className={`absolute top-14 left-0 right-0 ${
-                        isDark ? 'bg-slate-800' : 'bg-white'
-                    } rounded-xl shadow-lg border ${
-                        isDark ? 'border-slate-700' : 'border-gray-200'
-                    } z-50 max-h-60`}
+                    className="absolute top-20  left-0 right-0 rounded-xl shadow-lg border z-50 max-h-96"
                 >
-                    <FlatList
-                        data={searchResults}
-                        renderItem={renderSearchResult}
-                        keyExtractor={(item) => item.id}
-                        showsVerticalScrollIndicator={false}
+                    <ScrollView
+                        nestedScrollEnabled={true}
                         keyboardShouldPersistTaps="handled"
-                    />
+                    >
+                        {searchResults.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                onPress={() => handleSelectResult(item)}
+                                style={{ borderBottomColor: theme.border }}
+                                className="p-4 border-b"
+                                activeOpacity={0.7}
+                            >
+                                <Text style={{ color: theme.text }} className="font-medium">
+                                    {item.name}
+                                </Text>
+                                {item.description && (
+                                    <Text style={{ color: theme.textSecondary }} className="text-sm mt-1">
+                                        {item.description}
+                                    </Text>
+                                )}
+                                {item.category && (
+                                    <Text
+                                        style={{
+                                            backgroundColor: theme.surface,
+                                            color: theme.textSecondary
+                                        }}
+                                        className="text-xs mt-1 px-2 py-1 rounded-full self-start"
+                                    >
+                                        {item.category}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 </Animated.View>
             )}
         </View>

@@ -2,7 +2,6 @@
 import {
     TakeMedicineRequest,
     SkipMedicineRequest,
-    PauseMedicineRequest,
     MedicineUsageResponse,
     DailyMedicineSchedule,
     IntakeEvent,
@@ -41,8 +40,8 @@ export class MedicineUsageService {
         return response;
     }
 
-    async pauseMedicine(userId: string, medicineId: string, request: PauseMedicineRequest): Promise<void> {
-        await this.apiService.pauseMedicine(userId, medicineId, request);
+    async pauseMedicine(userId: string, medicineId: string): Promise<void> {
+        await this.apiService.pauseMedicine(userId, medicineId);
         await this.invalidateScheduleCache(userId);
     }
 
@@ -263,27 +262,6 @@ export class MedicineUsageService {
 
         return { isValid: true };
     }
-
-    // Validate pause medicine request
-    validatePauseMedicineRequest(request: PauseMedicineRequest): { isValid: boolean; error?: string } {
-        if (!request.pauseReason || request.pauseReason.trim().length === 0) {
-            return { isValid: false, error: 'Pause reason is required' };
-        }
-
-        if (request.resumeAt) {
-            const resumeTime = new Date(request.resumeAt);
-            if (isNaN(resumeTime.getTime())) {
-                return { isValid: false, error: 'Invalid resume time format' };
-            }
-
-            if (resumeTime <= new Date()) {
-                return { isValid: false, error: 'Resume time must be in the future' };
-            }
-        }
-
-        return { isValid: true };
-    }
-
     // Validate inventory update request
     validateInventoryUpdateRequest(request: InventoryUpdateRequest): { isValid: boolean; error?: string } {
         if (request.newInventoryAmount === undefined || request.newInventoryAmount === null) {

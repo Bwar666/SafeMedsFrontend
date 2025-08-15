@@ -1,4 +1,6 @@
 // medicineStatsTypes.ts
+import {FoodInstruction} from "@/app/services/medicine/medicine/MedicineServiceTypes";
+
 export interface DailyMedicineSchedule {
     date: string; // YYYY-MM-DD format
     intakeEvents: IntakeEvent[];
@@ -15,6 +17,7 @@ export interface IntakeEvent {
     medicineName: string;
     medicineIcon?: string;
     medicineColor?: string;
+    foodInstruction?: FoodInstruction;
     scheduledDateTime: string;
     actualDateTime?: string;
     status: IntakeStatus;

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
-    ScrollView,
     TouchableOpacity,
     Alert,
     ActivityIndicator,
@@ -12,34 +11,34 @@ import {
     BackHandler
 } from 'react-native';
 import { ArrowLeft, Check, X } from 'lucide-react-native';
-import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { UserStorageService } from '../services/user/UserService';
-import PageIndicator from '../components/PageIndicator';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
-
-// Import step components (reuse from AddMedicineScreen)
-import BasicInfoStep from '../components/medicine/BasicInfoStep';
-import ConditionStep from '../components/medicine/ConditionStep';
-import FormStep from '../components/medicine/FormStep';
-import FrequencyStep from '../components/medicine/FrequencyStep';
-import DosageStep from '../components/medicine/DosageStep';
-import DurationStep from '../components/medicine/DurationStep';
-import FoodInstructionStep from '../components/medicine/FoodInstructionStep';
-import InventoryStep from '../components/medicine/InventoryStep'; // NEW
-import ReviewStep from '../components/medicine/ReviewStep';
-import {MedicineResponse} from "@/app/services/medicine/usage/MedicineUsageTypes";
-import {medicineService} from "@/app/services";
+// Import step components
+import BasicInfoStep from '../../components/medicine/BasicInfoStep';
+import ConditionStep from '../../components/medicine/ConditionStep';
+import FormStep from '../../components/medicine/FormStep';
+import FrequencyStep from '../../components/medicine/FrequencyStep';
+import DosageStep from '../../components/medicine/DosageStep';
+import FoodInstructionStep from '../../components/medicine/FoodInstructionStep';
+import DurationStep from '../../components/medicine/DurationStep';
+import InventoryStep from '../../components/medicine/InventoryStep';
+import ReviewStep from '../../components/medicine/ReviewStep';
+import { MedicineResponse } from "@/app/services/medicine/usage/MedicineUsageTypes";
+import { medicineService } from "@/app/services";
 import {
     FoodInstruction,
     FrequencyConfig,
     FrequencyType,
     IntakeSchedule,
-    MedicineForm, MedicineRequest
+    MedicineForm,
+    MedicineRequest
 } from "@/app/services/medicine/medicine/MedicineServiceTypes";
+import { UserStorageService } from "@/app/services/user";
+import MedicineCreationLoading from "@/app/components/medicine/MedicineCreationLoading";
 
 // Types
 type EditMedicineScreenNavigationProp = StackNavigationProp<RootStackParamList, 'EditMedicine'>;
@@ -56,19 +55,14 @@ interface FormData {
     form: MedicineForm | null;
     frequencyType: FrequencyType | null;
     frequencyConfig: FrequencyConfig;
-    intakeTimes: string[];
     intakeSchedules: IntakeSchedule[];
-    scheduleDuration: number;
-    refillReminderThreshold: number;
+    scheduleDuration: number | null;
+    refillReminderThreshold: number | null;
     foodInstruction: FoodInstruction | null;
     icon: string;
     color: string;
-    relatedAllergyIds: string[];
-
-    // NEW: Add inventory fields
-    currentInventory: number;
-    totalInventory: number;
-    inventoryUnit: string;
+    currentInventory: number | null;
+    totalInventory: number | null;
     autoDeductInventory: boolean;
     notificationsEnabled: boolean;
     missedDoseThresholdMinutes: number;
@@ -76,19 +70,20 @@ interface FormData {
     lateIntakeWindowHours: number;
 }
 
-const TOTAL_STEPS = 9; // Updated from 8 to 9
+const TOTAL_STEPS = 9;
 
 const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, route }) => {
     const { medicineId } = route.params;
-    const { isDark } = useTheme();
+    const { isDark, theme } = useTheme();
     const { t, isRTL } = useLanguage();
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [medicine, setMedicine] = useState<MedicineResponse | null>(null);
     const [currentStep, setCurrentStep] = useState(0);
+    const [loadingStep, setLoadingStep] = useState<'creating' | 'analyzing' | 'generating_warnings' | 'finalizing'>('creating');
 
-    // Form data state with inventory fields
+    // Form data state
     const [formData, setFormData] = useState<FormData>({
         name: '',
         conditionReason: '',
@@ -99,22 +94,16 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
             specificDays: [],
             cycleActiveDays: 0,
             cycleRestDays: 0,
-            dayOfMonth: 1,
         },
-        intakeTimes: ['08:00'],
         intakeSchedules: [{ time: '08:00', amount: 1 }],
-        scheduleDuration: 7,
-        refillReminderThreshold: 5,
+        scheduleDuration: 0,
+        refillReminderThreshold: null,
         foodInstruction: null,
         icon: '💊',
         color: '#6366F1',
-        relatedAllergyIds: [],
-
-        // NEW: Add default inventory values
-        currentInventory: 30,
-        totalInventory: 30,
-        inventoryUnit: 'pills',
-        autoDeductInventory: true,
+        currentInventory: null,
+        totalInventory: null,
+        autoDeductInventory: false,
         notificationsEnabled: true,
         missedDoseThresholdMinutes: 60,
         allowLateIntake: true,
@@ -126,34 +115,22 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
         useCallback(() => {
             const onBackPress = () => {
                 if (currentStep > 0) {
-                    // If not on first step, go back one step
                     prevStep();
-                    return true; // Prevent default behavior
+                    return true;
                 } else {
-                    // If on first step, show confirmation dialog
                     Alert.alert(
                         t('discardChanges') || 'Discard Changes?',
                         t('discardChangesDesc') || 'Are you sure you want to discard your changes and go back?',
                         [
-                            {
-                                text: t('cancel') || 'Cancel',
-                                style: 'cancel',
-                            },
-                            {
-                                text: t('discard') || 'Discard',
-                                style: 'destructive',
-                                onPress: () => navigation.goBack(),
-                            },
+                            { text: t('cancel') || 'Cancel', style: 'cancel' },
+                            { text: t('discard') || 'Discard', style: 'destructive', onPress: () => navigation.goBack() },
                         ]
                     );
-                    return true; // Prevent default behavior
+                    return true;
                 }
             };
 
-            // Add event listener
             const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-            // Cleanup function
             return () => subscription.remove();
         }, [currentStep])
     );
@@ -168,7 +145,7 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                 const med = await medicineService.getMedicineById(user.id, medicineId);
                 setMedicine(med);
 
-                // Populate form data with existing medicine data
+                // Populate form data
                 setFormData({
                     name: med.name || '',
                     conditionReason: med.conditionReason || '',
@@ -179,22 +156,16 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                         specificDays: [],
                         cycleActiveDays: 0,
                         cycleRestDays: 0,
-                        dayOfMonth: 1,
                     },
-                    intakeTimes: med.intakeTimes || ['08:00'],
                     intakeSchedules: med.intakeSchedules || [{ time: '08:00', amount: 1 }],
-                    scheduleDuration: med.scheduleDuration || 30,
-                    refillReminderThreshold: med.refillReminderThreshold || 7,
+                    scheduleDuration: med.scheduleDuration || 0,
+                    refillReminderThreshold: med.refillReminderThreshold || null,
                     foodInstruction: med.foodInstruction || FoodInstruction.DOES_NOT_MATTER,
                     icon: med.icon || '💊',
                     color: med.color || '#6366F1',
-                    relatedAllergyIds: med.relatedAllergies?.map(a => a.id) || [],
-
-                    // NEW: Populate inventory fields (with fallbacks for compatibility)
-                    currentInventory: med.currentInventory || 30,
-                    totalInventory: med.totalInventory || 30,
-                    inventoryUnit: med.inventoryUnit || 'pills',
-                    autoDeductInventory: med.autoDeductInventory !== undefined ? med.autoDeductInventory : true,
+                    currentInventory: med.currentInventory || null,
+                    totalInventory: med.totalInventory || null,
+                    autoDeductInventory: med.autoDeductInventory !== undefined ? med.autoDeductInventory : false,
                     notificationsEnabled: med.notificationsEnabled !== undefined ? med.notificationsEnabled : true,
                     missedDoseThresholdMinutes: med.missedDoseThresholdMinutes || 60,
                     allowLateIntake: med.allowLateIntake !== undefined ? med.allowLateIntake : true,
@@ -229,32 +200,41 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
 
     const validateCurrentStep = (): boolean => {
         switch (currentStep) {
-            case 0: // Basic Info
-                return formData.name.trim().length > 0;
-            case 1: // Condition
-                return formData.conditionReason.trim().length > 0;
-            case 2: // Form
-                return formData.form !== null;
-            case 3: // Frequency
-                return formData.frequencyType !== null;
-            case 4: // Dosage
-                return formData.intakeSchedules.length > 0 &&
-                    formData.intakeSchedules.every(schedule =>
-                        schedule.time && schedule.amount > 0
-                    );
-            case 5: // Duration
-                return formData.scheduleDuration > 0;
-            case 6: // Food Instruction
-                return formData.foodInstruction !== null;
-            case 7: // Inventory & Settings
-                return formData.currentInventory >= 0 &&
-                    formData.totalInventory >= formData.currentInventory &&
-                    formData.missedDoseThresholdMinutes > 0 &&
-                    formData.lateIntakeWindowHours > 0;
-            case 8: // Review
-                return true;
+            case 0: return formData.name.trim().length > 0;
+            case 1: return formData.conditionReason.trim().length > 0;
+            case 2: return formData.form !== null;
+            case 3: return formData.frequencyType !== null;
+            case 4: return formData.intakeSchedules.length > 0 &&
+                formData.intakeSchedules.every(schedule => schedule.time && schedule.amount > 0);
+            case 8: return true;
+            default: return true;
+        }
+    };
+
+    const getStepErrorMessage = (step: number): string => {
+        switch (step) {
+            case 0:
+                return t('medicineNameRequired') || 'Medicine name is required';
+            case 1:
+                return t('conditionReasonRequired') || 'Condition/reason is required';
+            case 2:
+                return t('medicineFormRequired') || 'Medicine form is required';
+            case 3:
+                return t('frequencyConfigurationInvalid') || 'Invalid frequency configuration';
+            case 4:
+                if (formData.intakeSchedules.length === 0) {
+                    return t('atLeastOneDosageRequired') || 'At least one dosage time is required';
+                } else {
+                    return t('dosageTimeAmountRequired') || 'All dosage times must have a valid time and amount';
+                }
+            case 5:
+                return t('foodInstructionRequired') || 'Food instruction is required';
+            case 6:
+                return t('durationRequired') || 'Duration is required';
+            case 7:
+                return t('inventorySettingsRequired') || 'Please check inventory settings';
             default:
-                return false;
+                return t('pleaseCompleteStep') || 'Please complete all required fields before continuing.';
         }
     };
 
@@ -262,9 +242,10 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
         if (validateCurrentStep()) {
             nextStep();
         } else {
+            const errorMessage = getStepErrorMessage(currentStep);
             Alert.alert(
                 t('incompleteStep') || 'Incomplete Step',
-                t('pleaseCompleteStep') || 'Please complete all required fields before continuing.',
+                errorMessage,
                 [{ text: t('ok') || 'OK' }]
             );
         }
@@ -278,15 +259,8 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                 t('discardChanges') || 'Discard Changes?',
                 t('discardChangesDesc') || 'Are you sure you want to discard your changes and go back?',
                 [
-                    {
-                        text: t('cancel') || 'Cancel',
-                        style: 'cancel',
-                    },
-                    {
-                        text: t('discard') || 'Discard',
-                        style: 'destructive',
-                        onPress: () => navigation.goBack(),
-                    },
+                    { text: t('cancel') || 'Cancel', style: 'cancel' },
+                    { text: t('discard') || 'Discard', style: 'destructive', onPress: () => navigation.goBack() },
                 ]
             );
         }
@@ -309,26 +283,24 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
             const user = await UserStorageService.getStoredUser();
             if (!user) throw new Error('User not found');
 
-            // Prepare complete update request with all data
+            // Start the loading sequence
+            setLoadingStep('creating');
+
+            // Prepare update request
             const updateRequest: MedicineRequest = {
                 name: formData.name.trim(),
                 form: formData.form!,
                 conditionReason: formData.conditionReason.trim(),
                 frequencyType: formData.frequencyType!,
                 frequencyConfig: formData.frequencyConfig,
-                intakeTimes: formData.intakeTimes,
                 intakeSchedules: formData.intakeSchedules,
-                scheduleDuration: formData.scheduleDuration,
-                refillReminderThreshold: formData.refillReminderThreshold,
+                scheduleDuration: formData.scheduleDuration!,
+                refillReminderThreshold: formData.refillReminderThreshold!,
                 foodInstruction: formData.foodInstruction!,
                 icon: formData.icon,
                 color: formData.color,
-                relatedAllergyIds: formData.relatedAllergyIds,
-
-                // NEW: Add inventory fields
-                currentInventory: formData.currentInventory,
-                totalInventory: formData.totalInventory,
-                inventoryUnit: formData.inventoryUnit,
+                currentInventory: formData.currentInventory!,
+                totalInventory: formData.totalInventory!,
                 autoDeductInventory: formData.autoDeductInventory,
                 notificationsEnabled: formData.notificationsEnabled,
                 missedDoseThresholdMinutes: formData.missedDoseThresholdMinutes,
@@ -336,20 +308,29 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                 lateIntakeWindowHours: formData.lateIntakeWindowHours,
             };
 
-            console.log('Updating medicine with:', updateRequest);
+            // Simulate the loading steps like in AddMedicineScreen
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            setLoadingStep('analyzing');
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            setLoadingStep('generating_warnings');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            setLoadingStep('finalizing');
 
             // Update medicine
             await medicineService.updateMedicine(user.id, medicine.id, updateRequest);
 
+            await new Promise(resolve => setTimeout(resolve, 800));
+
             Alert.alert(
                 t('success') || 'Success',
-                t('medicineUpdatedSuccess') || 'Medicine has been updated successfully!',
-                [
-                    {
-                        text: t('ok') || 'OK',
-                        onPress: () => navigation.navigate('MedicineDetail', { medicineId: medicine.id }),
-                    },
-                ]
+                t('medicineUpdatedSuccess') || 'Medicine has been updated successfully! Updated safety warnings have been generated.',
+                [{
+                    text: t('ok') || 'OK',
+                    onPress: () => navigation.goBack()
+                }]
             );
         } catch (error) {
             console.error('Error updating medicine:', error);
@@ -369,9 +350,9 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
             t('medicineForm') || 'Medicine Form',
             t('frequency') || 'Frequency',
             t('dosage') || 'Dosage',
-            t('duration') || 'Duration',
             t('foodInstruction') || 'Food Instruction',
-            t('inventorySettings') || 'Inventory & Settings', // NEW
+            t('duration') || 'Duration',
+            t('inventorySettings') || 'Inventory & Settings',
             t('review') || 'Review',
         ];
         return titles[step] || '';
@@ -387,89 +368,83 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
         };
 
         switch (currentStep) {
-            case 0:
-                return <BasicInfoStep {...stepProps} />;
-            case 1:
-                return <ConditionStep {...stepProps} />;
-            case 2:
-                return <FormStep {...stepProps} />;
-            case 3:
-                return <FrequencyStep {...stepProps} />;
-            case 4:
-                return <DosageStep {...stepProps} />;
-            case 5:
-                return <DurationStep {...stepProps} />;
-            case 6:
-                return <FoodInstructionStep {...stepProps} />;
-            case 7:
-                return <InventoryStep {...stepProps} />; // NEW
-            case 8:
-                return <ReviewStep {...stepProps} />; // Moved to step 8
-            default:
-                return null;
+            case 0: return <BasicInfoStep {...stepProps} />;
+            case 1: return <ConditionStep {...stepProps} />;
+            case 2: return <FormStep {...stepProps} />;
+            case 3: return <FrequencyStep {...stepProps} />;
+            case 4: return <DosageStep {...stepProps} />;
+            case 5: return <FoodInstructionStep {...stepProps} />;
+            case 6: return <DurationStep {...stepProps} />;
+            case 7: return <InventoryStep {...stepProps} />;
+            case 8: return <ReviewStep {...stepProps} />;
+            default: return null;
         }
     };
 
     const isLastStep = currentStep === TOTAL_STEPS - 1;
     const isFirstStep = currentStep === 0;
 
+    // Show loading screen while fetching medicine data
     if (loading) {
         return (
-            <View className={`flex-1 justify-center items-center ${isDark ? 'bg-slate-900' : 'bg-blue-50'}`}>
-                <ActivityIndicator size="large" color={isDark ? '#6366F1' : '#4F46E5'} />
-                <Text className={`mt-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                    {t('loadingMedicine') || 'Loading medicine details...'}
-                </Text>
-            </View>
+            <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }}>
+                <View className="flex-1 justify-center items-center">
+                    <ActivityIndicator size="large" color={theme.primary} />
+                    <Text className="text-lg mt-4" style={{ color: theme.text }}>
+                        {t('loadingMedicine') || 'Loading medicine details...'}
+                    </Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
+    // Show error state if medicine not found
     if (!medicine) {
         return (
-            <View className={`flex-1 justify-center items-center ${isDark ? 'bg-slate-900' : 'bg-blue-50'}`}>
-                <Text className={`text-lg ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
-                    {t('medicineNotFound') || 'Medicine not found'}
-                </Text>
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    className={`mt-4 px-6 py-3 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}
-                >
-                    <Text className={`font-medium ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
-                        {t('goBack') || 'Go Back'}
+            <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }}>
+                <View className="flex-1 justify-center items-center px-4">
+                    <Text className="text-lg text-center mb-4" style={{ color: theme.text }}>
+                        {t('medicineNotFound') || 'Medicine not found'}
                     </Text>
-                </TouchableOpacity>
-            </View>
+                    <TouchableOpacity
+                        onPress={() => navigation.goBack()}
+                        className="px-6 py-3 rounded-lg"
+                        style={{ backgroundColor: theme.surface }}
+                    >
+                        <Text className="font-medium" style={{ color: theme.text }}>
+                            {t('goBack') || 'Go Back'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
         );
     }
 
     return (
-        <SafeAreaView className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-blue-50'}`}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }}>
             <KeyboardAvoidingView
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
             >
                 {/* Header */}
-                <View className={`flex-row items-center justify-between p-4 border-b ${
-                    isDark ? 'border-slate-700' : 'border-gray-200'
-                }`}>
+                <View className="flex-row items-center justify-between p-4 border-b"
+                      style={{ borderBottomColor: theme.border, backgroundColor: theme.card }}>
                     <TouchableOpacity
                         onPress={handleBackPress}
                         className="p-2"
                         disabled={saving}
                     >
-                        <ArrowLeft size={24} color={isDark ? '#F8FAFC' : '#1F2937'} />
+                        <ArrowLeft size={24} color={theme.text} />
                     </TouchableOpacity>
 
                     <View className="flex-1 mx-4">
-                        <Text className={`text-lg font-semibold text-center ${
-                            isDark ? 'text-slate-100' : 'text-gray-800'
-                        }`}>
+                        <Text className="text-lg font-semibold text-center"
+                              style={{ color: theme.text }}>
                             {t('editMedicine') || 'Edit Medicine'}
                         </Text>
-                        <Text className={`text-sm text-center ${
-                            isDark ? 'text-slate-400' : 'text-gray-500'
-                        }`}>
+                        <Text className="text-sm text-center"
+                              style={{ color: theme.textSecondary }}>
                             {getStepTitle(currentStep)} ({currentStep + 1}/{TOTAL_STEPS})
                         </Text>
                     </View>
@@ -480,70 +455,46 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                                 t('discardChanges') || 'Discard Changes?',
                                 t('discardChangesDesc') || 'Are you sure you want to discard your changes and go back?',
                                 [
-                                    {
-                                        text: t('cancel') || 'Cancel',
-                                        style: 'cancel',
-                                    },
-                                    {
-                                        text: t('discard') || 'Discard',
-                                        style: 'destructive',
-                                        onPress: () => navigation.goBack(),
-                                    },
+                                    { text: t('cancel') || 'Cancel', style: 'cancel' },
+                                    { text: t('discard') || 'Discard', style: 'destructive', onPress: () => navigation.goBack() },
                                 ]
                             );
                         }}
                         className="p-2"
                         disabled={saving}
                     >
-                        <X size={24} color={isDark ? '#F8FAFC' : '#1F2937'} />
+                        <X size={24} color={theme.text} />
                     </TouchableOpacity>
                 </View>
 
-                {/* Progress Indicator */}
-                <View className="py-4">
-                    <PageIndicator
-                        totalPages={TOTAL_STEPS}
-                        currentPage={currentStep}
-                        variant="progress"
-                    />
+                {/* Step Content */}
+                <View className="flex-1">
+                    {renderStep()}
                 </View>
 
-                {/* Step Content */}
-                <ScrollView
-                    className="flex-1"
-                    showsVerticalScrollIndicator={false}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    {renderStep()}
-                </ScrollView>
-
                 {/* Navigation Buttons */}
-                <View className={`flex-row items-center justify-between p-4 border-t ${
-                    isDark ? 'border-slate-700 bg-slate-800' : 'border-gray-200 bg-white'
-                }`}>
+                <View className="flex-row items-center justify-between p-4 border-t"
+                      style={{ borderTopColor: theme.border, backgroundColor: theme.card }}>
                     <TouchableOpacity
                         onPress={prevStep}
                         disabled={isFirstStep || saving}
-                        className={`px-6 py-3 rounded-xl ${
-                            isFirstStep || saving
-                                ? isDark ? 'bg-slate-700' : 'bg-gray-200'
-                                : isDark ? 'bg-slate-700' : 'bg-gray-300'
-                        }`}
+                        className="px-6 py-3 rounded-xl"
+                        style={{ backgroundColor: isFirstStep || saving ? theme.border : theme.surface }}
                     >
-                        <Text className={`font-medium ${
-                            isFirstStep || saving
-                                ? isDark ? 'text-slate-500' : 'text-gray-400'
-                                : isDark ? 'text-slate-200' : 'text-gray-700'
-                        }`}>
+                        <Text className="font-medium"
+                              style={{ color: isFirstStep || saving ? theme.textSecondary : theme.text }}>
                             {t('previous') || 'Previous'}
                         </Text>
                     </TouchableOpacity>
 
                     <View className="flex-1 mx-4">
-                        <View className={`h-1 rounded-full ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}>
+                        <View className="h-1 rounded-full" style={{ backgroundColor: theme.border }}>
                             <View
-                                className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-                                style={{ width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%` }}
+                                className="h-full rounded-full"
+                                style={{
+                                    width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%`,
+                                    backgroundColor: theme.primary
+                                }}
                             />
                         </View>
                     </View>
@@ -551,15 +502,14 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                     <TouchableOpacity
                         onPress={isLastStep ? handleSave : handleNext}
                         disabled={saving}
-                        className={`flex-row items-center px-6 py-3 rounded-xl ${
-                            saving ? 'bg-gray-400' : 'bg-indigo-500'
-                        }`}
+                        className="flex-row items-center px-6 py-3 rounded-xl"
+                        style={{ backgroundColor: saving ? theme.border : theme.primary }}
                     >
                         {isLastStep ? (
                             <>
                                 <Check size={18} color="white" />
                                 <Text className="text-white font-medium ml-2">
-                                    {saving ? (t('saving') || 'Saving...') : (t('updateMedicine') || 'Update')}
+                                    {saving ? (t('updating') || 'Updating...') : (t('updateMedicine') || 'Update')}
                                 </Text>
                             </>
                         ) : (
@@ -570,6 +520,13 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+
+            {/* Loading Dialog - Outside KeyboardAvoidingView */}
+            <MedicineCreationLoading
+                visible={saving}
+                currentStep={loadingStep}
+                medicineName={formData.name}
+            />
         </SafeAreaView>
     );
 };

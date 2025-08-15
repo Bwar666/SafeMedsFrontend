@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import SearchDropdown from '../SearchDropdown';
+import { useLanguage } from "@/app/context/LanguageContext";
+import {useTheme} from "@/app/context/ThemeContext";
 
 interface FormData {
     conditionReason: string;
@@ -10,27 +12,24 @@ interface FormData {
 interface ConditionStepProps {
     formData: FormData;
     updateFormData: (updates: Partial<FormData>) => void;
-    isDark: boolean;
-    t: (key: string) => string;
-    isRTL: boolean;
 }
 
 const ConditionStep: React.FC<ConditionStepProps> = ({
                                                          formData,
                                                          updateFormData,
-                                                         isDark,
-                                                         t,
-                                                         isRTL,
                                                      }) => {
+    const { theme, isDark } = useTheme();
+    const { t, isRTL } = useLanguage();
+
     const commonConditions = [
-        { id: '1', name: 'Headache', icon: '🤕' },
-        { id: '2', name: 'Diabetes', icon: '🩺' },
-        { id: '3', name: 'Hypertension', icon: '💗' },
-        { id: '4', name: 'Arthritis', icon: '🦴' },
-        { id: '5', name: 'Asthma', icon: '🫁' },
-        { id: '6', name: 'Heart Disease', icon: '❤️' },
-        { id: '7', name: 'Depression', icon: '🧠' },
-        { id: '8', name: 'Allergies', icon: '🤧' },
+        { id: '1', name: t('headache'), icon: '🤕' },
+        { id: '2', name: t('diabetes'), icon: '🩺' },
+        { id: '3', name: t('hypertension'), icon: '💗' },
+        { id: '4', name: t('arthritis'), icon: '🦴' },
+        { id: '5', name: t('asthma'), icon: '🫁' },
+        { id: '6', name: t('heartDisease'), icon: '❤️' },
+        { id: '7', name: t('depression'), icon: '🧠' },
+        { id: '8', name: t('allergies'), icon: '🤧' },
     ];
 
     const handleConditionChange = (conditionReason: string) => {
@@ -46,110 +45,128 @@ const ConditionStep: React.FC<ConditionStepProps> = ({
     };
 
     return (
-        <View className="flex-1 p-5">
-            {/* Header */}
+        <View
+            className="flex-1 p-5"
+            style={{
+                backgroundColor: theme.background,
+            }}
+        >
             <View className="mb-8">
-                <Text className={`text-2xl font-bold text-center mb-2 ${
-                    isDark ? 'text-slate-100' : 'text-gray-800'
-                }`}>
-                    {t('conditionReason') || 'What condition is this for?'}
+                <Text
+                    className="text-2xl font-bold text-center mb-2"
+                    style={{ color: theme.text }}
+                >
+                    {t('conditionReason')}
                 </Text>
-                <Text className={`text-base text-center ${
-                    isDark ? 'text-slate-300' : 'text-gray-500'
-                }`}>
-                    {t('conditionDescription') || 'Tell us what this medicine is treating'}
+                <Text
+                    className="text-base text-center"
+                    style={{ color: theme.textSecondary }}
+                >
+                    {t('conditionDescription')}
                 </Text>
             </View>
 
-            {/* Condition Search Input */}
             <View className="mb-6">
-                <Text className={`text-sm font-medium mb-3 ${
-                    isDark ? 'text-slate-200' : 'text-gray-700'
-                }`}>
-                    {t('condition') || 'Condition'} *
+                <Text
+                    className="text-sm font-medium mb-3"
+                    style={{ color: theme.text }}
+                >
+                    {t('condition')} *
                 </Text>
 
                 <SearchDropdown
                     value={formData.conditionReason}
                     onChangeText={handleConditionChange}
-                    placeholder={t('searchCondition') || 'Search for condition or symptom...'}
+                    placeholder={t('searchCondition')}
                     searchType="condition"
                     isDark={isDark}
                     isRTL={isRTL}
                     onSelectResult={handleConditionSelect}
                 />
 
-                <Text className={`text-xs mt-2 ${
-                    isDark ? 'text-slate-400' : 'text-gray-500'
-                }`}>
-                    {t('conditionHint') || 'Start typing to search for conditions'}
+                <Text
+                    className="text-xs mt-2"
+                    style={{ color: theme.textSecondary }}
+                >
+                    {t('conditionHint')}
                 </Text>
             </View>
 
-            {/* Quick Select Common Conditions */}
             <View className="mb-6">
-                <Text className={`text-sm font-medium mb-3 ${
-                    isDark ? 'text-slate-200' : 'text-gray-700'
-                }`}>
-                    {t('commonConditions') || 'Common Conditions'}
+                <Text
+                    className="text-sm font-medium mb-3"
+                    style={{ color: theme.text }}
+                >
+                    {t('commonConditions')}
                 </Text>
 
                 <View className="flex-row flex-wrap gap-3">
-                    {commonConditions.map((condition) => (
-                        <TouchableOpacity
-                            key={condition.id}
-                            onPress={() => selectQuickCondition(condition)}
-                            className={`flex-row items-center px-4 py-3 rounded-xl border ${
-                                formData.conditionReason === condition.name
-                                    ? 'border-indigo-500 border-2'
-                                    : isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                            }`}
-                            activeOpacity={0.7}
-                        >
-                            <Text className="text-lg mr-2">{condition.icon}</Text>
-                            <Text className={`text-sm font-medium ${
-                                formData.conditionReason === condition.name
-                                    ? 'text-indigo-500'
-                                    : isDark ? 'text-slate-200' : 'text-gray-700'
-                            }`}>
-                                {condition.name}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+                    {commonConditions.map((condition) => {
+                        const isSelected = formData.conditionReason === condition.name;
+                        return (
+                            <TouchableOpacity
+                                key={condition.id}
+                                onPress={() => selectQuickCondition(condition)}
+                                className="flex-row items-center px-4 py-3 rounded-xl border"
+                                style={{
+                                    borderColor: isSelected ? theme.primary : theme.border,
+                                    borderWidth: isSelected ? 2 : 1,
+                                    backgroundColor: isSelected ? theme.primaryLight : theme.card,
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <Text className="text-lg mr-2">{condition.icon}</Text>
+                                <Text
+                                    className="text-sm font-medium"
+                                    style={{
+                                        color: isSelected ? theme.primary : theme.text
+                                    }}
+                                >
+                                    {condition.name}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
             </View>
 
-            {/* Selected Condition Display */}
             {formData.conditionReason.length > 0 && (
-                <View className={`p-4 rounded-xl mt-4 ${
-                    isDark ? 'bg-slate-800' : 'bg-gray-50'
-                }`}>
+                <View
+                    className="p-4 rounded-xl mt-4"
+                    style={{ backgroundColor: theme.surface }}
+                >
                     <View className="flex-row items-center">
                         <Text className="text-2xl mr-3">🎯</Text>
                         <View className="flex-1">
-                            <Text className={`font-semibold ${
-                                isDark ? 'text-slate-100' : 'text-gray-800'
-                            }`}>
+                            <Text
+                                className="font-semibold"
+                                style={{ color: theme.text }}
+                            >
                                 {formData.conditionReason}
                             </Text>
-                            <Text className={`text-sm ${
-                                isDark ? 'text-slate-400' : 'text-gray-500'
-                            }`}>
-                                {t('treatingCondition') || 'Treating this condition'}
+                            <Text
+                                className="text-sm"
+                                style={{ color: theme.textSecondary }}
+                            >
+                                {t('treatingCondition')}
                             </Text>
                         </View>
                     </View>
                 </View>
             )}
 
-            {/* Help Text */}
-            <View className={`mt-8 p-4 rounded-xl ${
-                isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-200'
-            }`}>
-                <Text className={`text-sm ${
-                    isDark ? 'text-green-300' : 'text-green-700'
-                }`}>
-                    💡 {t('conditionTip') || 'Tip: Be specific about your condition to get better medicine recommendations and warnings'}
+            <View
+                className="mt-8 p-4 rounded-xl border"
+                style={{
+                    backgroundColor: theme.success + '22',
+                    borderColor: theme.success + '33'
+                }}
+            >
+                <Text
+                    className="text-sm"
+                    style={{ color: theme.success }}
+                >
+                    💡 {t('conditionTip')}
                 </Text>
             </View>
         </View>

@@ -25,9 +25,19 @@ export class MedicineService {
         }
     }
 
-    // Get single medicine by ID
     async getMedicineById(userId: string, medicineId: string): Promise<MedicineResponse> {
-        return this.apiService.getMedicineById(userId, medicineId);
+
+        try {
+            const medicine = await this.apiService.getMedicineById(userId, medicineId);
+            return medicine;
+        } catch (error) {
+            const cachedMedicine = await MedicineStorageService.getMedicineById(userId, medicineId);
+            if (cachedMedicine) {
+                return cachedMedicine;
+            } else {
+                throw new Error(`Medicine with ID ${medicineId} not found`);
+            }
+        }
     }
 
     // Create new medicine

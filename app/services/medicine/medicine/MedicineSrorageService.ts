@@ -25,6 +25,19 @@ export class MedicineStorageService {
             return [];
         }
     }
+    static async getMedicineById(userId: string, medicineId: string): Promise<MedicineResponse | null> {
+        try {
+            const cachedMedicines = await this.getStoredMedicines(userId);
+            const medicine = cachedMedicines.find(m => m.id === medicineId);
+            if (medicine) {
+                return medicine;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            return null;
+        }
+    }
 
     // Update last sync timestamp
     static async updateLastSync(): Promise<void> {

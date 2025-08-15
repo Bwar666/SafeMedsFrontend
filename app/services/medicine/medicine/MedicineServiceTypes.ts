@@ -4,22 +4,17 @@ export interface MedicineRequest {
     conditionReason?: string;
     frequencyType: FrequencyType;
     frequencyConfig?: FrequencyConfig;
-    intakeTimes: string[]; // LocalTime as string in HH:mm format
     intakeSchedules: IntakeSchedule[];
     scheduleDuration?: number;
-    relatedAllergyIds?: string[];
     refillReminderThreshold?: number;
     foodInstruction?: FoodInstruction;
-
     currentInventory?: number;
     totalInventory?: number;
-    inventoryUnit?: string;
     autoDeductInventory?: boolean;
     notificationsEnabled?: boolean;
     missedDoseThresholdMinutes?: number;
     allowLateIntake?: boolean;
     lateIntakeWindowHours?: number;
-
     icon?: string;
     color?: string;
 }
@@ -30,7 +25,6 @@ export interface MedicineResponse {
     form: MedicineForm;
     conditionReason?: string;
     frequencyType: FrequencyType;
-    intakeTimes: string[];
     frequencyConfig?: FrequencyConfig;
     intakeSchedules: IntakeSchedule[];
     scheduleDuration?: number;
@@ -39,11 +33,9 @@ export interface MedicineResponse {
     icon?: string;
     color?: string;
     isActive: boolean;
-    relatedAllergies: AllergyResponse[];
     formattedDosage?: string;
     currentInventory?: number;
     totalInventory?: number;
-    inventoryUnit?: string;
     autoDeductInventory?: boolean;
     notificationsEnabled?: boolean;
     missedDoseThresholdMinutes?: number;
@@ -61,7 +53,6 @@ export interface FrequencyConfig {
     specificDays?: DayOfWeek[];
     cycleActiveDays?: number;
     cycleRestDays?: number;
-    dayOfMonth?: number;
 }
 
 export interface AllergyResponse {
@@ -74,12 +65,15 @@ export interface AllergyResponse {
 export enum MedicineForm {
     PILL = 'PILL',
     CAPSULE = 'CAPSULE',
+    HARDCAPSULE = 'HARDCAPSULE',
     TABLET = 'TABLET',
     INJECTION = 'INJECTION',
     LIQUID = 'LIQUID',
     DROPS = 'DROPS',
     INHALER = 'INHALER',
     POWDER = 'POWDER',
+    CREAM = 'CREAM',
+    GUMMYBEAR = 'GUMMYBEAR',
     PATCH = 'PATCH',
     GEL = 'GEL',
     SPRAY = 'SPRAY',

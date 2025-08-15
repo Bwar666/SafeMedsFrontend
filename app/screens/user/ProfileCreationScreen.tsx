@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, SafeAreaView, Alert, Text } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
-import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
-import { IconButton, PageIndicator } from '../components';
-import { BasicInfoForm, GenderBirthForm, AllergyForm } from '../components/forms';
-import { userService, UserStorageService, CreateUserRequest, ApiError } from '../services/user/UserService';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { IconButton, PageIndicator } from '../../components';
+import { BasicInfoForm, GenderBirthForm, AllergyForm } from '../../components/forms';
+import { RootStackParamList } from '../../navigation/AppNavigator';
+import {ApiError} from "@/app/services/ai";
+import {CreateUserRequest, userService, UserStorageService} from "@/app/services/user";
 
 type ProfileCreationScreenProps = StackScreenProps<RootStackParamList, 'ProfileCreation'>;
 type ProfileStep = 'basicInfo' | 'genderBirth' | 'allergies';
@@ -22,7 +23,7 @@ interface GenderBirthInfo {
 }
 
 const ProfileCreationScreen: React.FC<ProfileCreationScreenProps> = ({ navigation }) => {
-    const { isDark } = useTheme();
+    const { isDark, theme } = useTheme();
     const { currentLanguage, isRTL, t } = useLanguage();
 
     const [currentStep, setCurrentStep] = useState<ProfileStep>('basicInfo');
@@ -31,7 +32,7 @@ const ProfileCreationScreen: React.FC<ProfileCreationScreenProps> = ({ navigatio
     const [isLoading, setIsLoading] = useState(false);
 
     const getLanguagePreference = (): 'ENGLISH' | 'ARABIC' | 'KURDISH' => {
-        const languageMap = { 'ar': 'ARABIC', 'ku': 'KURDISH' } as const;
+        const languageMap = { 'ar': 'ARABIC', 'ku': 'KURDISH', 'en': 'ENGLISH'} as const;
         return languageMap[currentLanguage as keyof typeof languageMap] || 'ENGLISH';
     };
 
@@ -103,7 +104,7 @@ const ProfileCreationScreen: React.FC<ProfileCreationScreenProps> = ({ navigatio
     const currentStepConfig = stepConfig[currentStep];
 
     return (
-        <SafeAreaView className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-blue-50'}`}>
+        <SafeAreaView className={`flex-1`} style={{ backgroundColor: theme.background }}>
             {/* Header */}
             <View className={`px-5 pt-4 pb-2 ${isRTL ? 'flex-row' : 'flex-row-reverse'} justify-between items-center`}>
                 <IconButton
@@ -116,7 +117,7 @@ const ProfileCreationScreen: React.FC<ProfileCreationScreenProps> = ({ navigatio
 
             {/* Step Info */}
             <View className="px-5 mb-6">
-                <Text className={`text-sm font-medium text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                <Text className={`text-sm font-medium text-center`} style={{ color: theme.textSecondary }}>
                     {`${t('step') || 'Step'} ${currentStepConfig.number} ${t('of') || 'of'} 3: ${currentStepConfig.title}`}
                 </Text>
             </View>
@@ -148,13 +149,13 @@ const ProfileCreationScreen: React.FC<ProfileCreationScreenProps> = ({ navigatio
                     className="absolute inset-0 justify-center items-center"
                     style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
                 >
-                    <View className={`p-8 rounded-2xl mx-8 ${isDark ? 'bg-slate-800' : 'bg-white'} shadow-lg`}>
+                    <View className={`p-8 rounded-2xl mx-8 shadow-lg`} style={{ backgroundColor: theme.card }}>
                         <View className="items-center">
                             <Text className="text-4xl mb-4">⏳</Text>
-                            <Text className={`text-lg font-semibold mb-2 text-center ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
+                            <Text className={`text-lg font-semibold mb-2 text-center`} style={{ color: theme.text }}>
                                 {t('creatingProfile') || 'Creating your profile...'}
                             </Text>
-                            <Text className={`text-sm text-center ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                            <Text className={`text-sm text-center`} style={{ color: theme.textSecondary }}>
                                 {t('pleaseWait') || 'Please wait a moment'}
                             </Text>
                         </View>

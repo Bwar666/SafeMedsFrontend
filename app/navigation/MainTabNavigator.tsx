@@ -1,22 +1,33 @@
-import React from 'react';
+// Updated MainTabNavigator.tsx - Better Navigation Pattern
+
+import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Home, Pill, AlertTriangle, User } from 'lucide-react-native';
 import HomeScreen from '../screens/HomeScreen';
-import MedicinesScreen from '../screens/MedicinesScreen';
-import AIWarningsScreen from '../screens/AIWarningsScreen';
+import MedicinesScreen from '../screens/medicine/MedicinesScreen';
+import AIWarningsScreen from '../screens/ai/AIWarningsScreen';
 import SettingsModal from '../components/SettingsModal';
+import { RootStackParamList } from './AppNavigator';
+import {UserStorageService} from "@/app/services/user";
 
 // Tab Navigator Types
 export type MainTabParamList = {
-    HomeTab: undefined;
+    HomeTab: {
+        dateTitle?: string;
+    };
     MedicinesTab: undefined;
     AIWarningsTab: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Navigation type for settings modal
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 // User Profile Button Component
 const UserProfileButton: React.FC<{ onPress: () => void }> = ({ onPress }) => {
@@ -61,7 +72,46 @@ const TabBarIcon: React.FC<{
 const MainTabNavigator: React.FC = () => {
     const { isDark } = useTheme();
     const { t, isRTL } = useLanguage();
-    const [showSettings, setShowSettings] = React.useState(false);
+    const navigation = useNavigation<NavigationProp>();
+    const [showSettings, setShowSettings] = useState(false);
+    const [user, setUser] = useState<any>(null);
+
+    // Load user data when component mounts
+    useEffect(() => {
+        loadUserData();
+    }, []);
+
+    // Load user data from storage
+    const loadUserData = async () => {
+        try {
+            const currentUser = await UserStorageService.getStoredUser();
+            if (currentUser) {
+                setUser(currentUser);
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    };
+
+    // Refresh user data when returning from profile/allergy screens
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('focus', () => {
+            loadUserData();
+        });
+
+        return unsubscribe;
+    }, [navigation]);
+
+    // Fixed navigation handlers without timeouts
+    const handleNavigateToProfile = () => {
+        setShowSettings(false);
+        navigation.navigate('Profile');
+    };
+
+    const handleNavigateToAllergies = () => {
+        setShowSettings(false);
+        navigation.navigate('AllergyManagement');
+    };
 
     const tabBarOptions = {
         headerShown: true,
@@ -130,14 +180,13 @@ const MainTabNavigator: React.FC = () => {
                         title: t('medicines') || 'Medicines',
                         tabBarLabel: t('medicines') || 'Medicines',
                     }}
-
                 />
                 <Tab.Screen
                     name="AIWarningsTab"
                     component={AIWarningsScreen}
                     options={{
-                        title: t('aiWarnings') || 'ai Warnings',
-                        tabBarLabel: t('warnings') || 'Warnings',
+                        title: t('ai_warnings') || 'AI Warnings',
+                        tabBarLabel: t('ai_warnings') || 'AI Warnings',
                     }}
                 />
             </Tab.Navigator>
@@ -146,6 +195,9 @@ const MainTabNavigator: React.FC = () => {
             <SettingsModal
                 visible={showSettings}
                 onClose={() => setShowSettings(false)}
+                user={user}
+                onNavigateToProfile={handleNavigateToProfile}
+                onNavigateToAllergies={handleNavigateToAllergies}
             />
         </>
     );

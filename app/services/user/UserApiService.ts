@@ -2,7 +2,7 @@
 import { CreateUserRequest, SafeMedUser, ApiError } from './UserTypes';
 
 // Configuration
-const COMPUTER_IP = '192.168.1.5';
+const COMPUTER_IP = '192.168.1.4';
 const API_BASE_URL = __DEV__
     ? `http://${COMPUTER_IP}:8080`
     : 'https://your-production-api.com';
@@ -17,7 +17,23 @@ const handleApiResponse = async <T>(response: Response): Promise<T> => {
             details: errorData
         } as ApiError;
     }
-    return response.json();
+    // Handle empty responses (204 No Content) or any response with no content
+    if (response.status === 204 || !response.headers.get('content-type')?.includes('application/json')) {
+        return null as any;
+    }
+
+    // Check if response has content before trying to parse JSON
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+        return null as any;
+    }
+
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        // If JSON parsing fails, return null for successful responses
+        return null as any;
+    }
 };
 
 // API Service Class

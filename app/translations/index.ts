@@ -14,8 +14,8 @@ type TranslationObject = Record<TranslationKeys, string>;
 // Define translations object with proper typing
 export const translations: Record<LanguageCode, TranslationObject> = {
     en: en as TranslationObject,
-    ar: ar as TranslationObject,
-    ku: ku as TranslationObject,
+    ar: ar as unknown as TranslationObject,
+    ku: ku as unknown as TranslationObject,
 } as const;
 
 // Type for the entire translations object
