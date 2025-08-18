@@ -32,6 +32,7 @@ import {
 import { medicineService } from '../../services/medicine/medicine/MedicineService';
 import { UserStorageService } from "@/app/services/user";
 import { medicines } from '@/assets/images';
+import {transparent} from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 
 type MedicineDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MedicineDetail'>;
@@ -571,7 +572,6 @@ const MedicineDetailScreen: React.FC<MedicineDetailScreenProps> = ({ navigation,
                         borderRadius: 12,
                         alignItems: 'center',
                         marginLeft: -15,
-                        backgroundColor: theme.card,
                         overflow: 'hidden'
                     }]}>
                             <Image

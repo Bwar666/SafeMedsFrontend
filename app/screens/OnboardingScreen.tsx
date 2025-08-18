@@ -13,8 +13,9 @@ import { StackScreenProps } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
-import { IconButton, PrimaryButton, LanguageDropdown, PageIndicator } from '../components';
+import { IconButton, PrimaryButton, PageIndicator } from '../components';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import LanguageDropdown from "@/app/components/LanguageDropdown";
 
 const { width: screenWidth } = Dimensions.get('window');
 

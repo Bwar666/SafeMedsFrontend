@@ -808,8 +808,10 @@ export const en = {
     creatingMedicine: "Creating Medicine",
     whyTrackInventory: "Why Track Inventory - Never run out of important medications and get timely refill reminders",
     creamDescription: "Cream - Topical medication applied to skin",
-
-
+    FoodInstruction: "Food Instruction",
+    Noinstruction: "No instruction",
+    "refillReminderTitle": "Time to Refill!",
+    "refillReminderMessage": "You only have {{currentInventory}} of {{medicineName}} left. Please restock soon."
 } as const;
 
 export default {};

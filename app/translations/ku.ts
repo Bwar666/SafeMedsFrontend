@@ -808,9 +808,10 @@ export const ku = {
     creatingMedicine: "دروستکردنی دەرمان",
     whyTrackInventory: "بۆچی شوێنکەوتنی کۆگا - هەرگیز دەرمانە گرنگەکانت تەواو نابن و بیرخستنەوەی پڕکردنەوە لە کاتی گونجاودا وەردەگریت",
     creamDescription: "کرێم - دەرمانی ناوخۆیی کە لەسەر پێست دادەنرێت",
-
-
-
+    FoodInstruction: "ڕێنمایی خواردن",
+    Noinstruction: "ڕێنمایی نییە",
+    refillReminderTitle: "کاتی پڕکردنەوەی نوێ!",
+    refillReminderMessage: "تەنها {{currentInventory}} لە {{medicineName}} ماوەتەوە. تکایە زوو دووبارە دابین بکە.",
 } as const;
 
 export default {};

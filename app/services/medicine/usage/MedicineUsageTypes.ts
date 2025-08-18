@@ -4,7 +4,8 @@ import {FoodInstruction, IntakeSchedule, MedicineForm} from "@/app/services/medi
 export interface TakeMedicineRequest {
     intakeEventId: string;
     actualTakeTime?: string; // ISO datetime string
-    actualDosageAmount?: number;
+    actualDosageAmount: number;
+    currentInventory : number;
     note?: string;
     deductFromInventory?: boolean;
 }
@@ -38,11 +39,13 @@ export interface IntakeEvent {
     medicineColor?: string;
     medicineForm: MedicineForm;
     foodInstruction?: FoodInstruction;
+    refillReminderThreshold: number;
+    currentInventory : number;
     scheduledDateTime: string;
     actualDateTime?: string;
     status: IntakeStatus;
     scheduledAmount: number;
-    actualAmount?: number;
+    actualAmount: number;
     note?: string;
     skipReason?: string;
     canTakeLate?: boolean;

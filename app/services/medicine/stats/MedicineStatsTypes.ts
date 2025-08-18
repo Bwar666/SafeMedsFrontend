@@ -18,6 +18,8 @@ export interface IntakeEvent {
     medicineIcon?: string;
     medicineColor?: string;
     foodInstruction?: FoodInstruction;
+    refillReminderThreshold: number;
+    currentInventory : number;
     scheduledDateTime: string;
     actualDateTime?: string;
     status: IntakeStatus;

@@ -808,4 +808,8 @@ export const ar = {
     creatingMedicine: "إنشاء الدواء",
     whyTrackInventory: "لماذا تتبع المخزون - لا تنفد أبداً من الأدوية المهمة واحصل على تذكيرات إعادة التعبئة في الوقت المناسب",
     creamDescription: "كريم - دواء موضعي يُطبق على الجلد",
+    FoodInstruction: "تعليمات الطعام",
+    Noinstruction: "لا توجد تعليمات",
+    refillReminderTitle: "حان وقت إعادة التعبئة!",
+    refillReminderMessage: "لديك فقط {{currentInventory}} من {{medicineName}} متبقية. يرجى إعادة التخزين قريبًا."
 } as const;

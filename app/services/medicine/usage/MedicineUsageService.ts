@@ -233,7 +233,7 @@ export class MedicineUsageService {
     // Validate take medicine request
     validateTakeMedicineRequest(request: TakeMedicineRequest): { isValid: boolean; error?: string } {
         if (!request.intakeEventId) {
-            return { isValid: false, error: 'Intake event ID is required' };
+            return { isValid: false, error: 'Intake event ID is required please update your inventory.' };
         }
 
         if (request.actualDosageAmount !== undefined && request.actualDosageAmount <= 0) {
@@ -247,6 +247,9 @@ export class MedicineUsageService {
             }
         }
 
+        if (request.deductFromInventory && request.currentInventory <request.actualDosageAmount) {
+            return { isValid: false, error: "Not enough medication in inventory" };
+        }
         return { isValid: true };
     }
 

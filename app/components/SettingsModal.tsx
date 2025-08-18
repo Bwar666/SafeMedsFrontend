@@ -393,7 +393,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     SafeMed v1.0.0
                                 </Text>
                                 <Text className={`text-sm mt-1`} style={{ color: theme.textSecondary }}>
-                                    {t('madeWithLove') || 'Made with ❤️ for better health'}
+                                    {t('madeWithLove') || 'Made with â¤ï¸ for better health'}
                                 </Text>
                                 {user?.id && (
                                     <Text className={`text-xs mt-2`} style={{ color: theme.textSecondary }}>

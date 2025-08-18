@@ -4,11 +4,10 @@ import {
     View,
     SafeAreaView,
     TouchableOpacity,
-    Alert,
     FlatList,
     ActivityIndicator,
     Modal,
-    RefreshControl, Image
+    RefreshControl, Image, Alert
 } from 'react-native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useLanguage} from '../context/LanguageContext';
@@ -131,12 +130,12 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
 
     const handleTakeMedicine = async (takeTime: string) => {
         if (!selectedIntake) return;
-
         try {
             const request: TakeMedicineRequest = {
                 intakeEventId: selectedIntake.id,
                 actualTakeTime: takeTime,
                 actualDosageAmount: selectedIntake.scheduledAmount,
+                currentInventory: selectedIntake.currentInventory,
                 deductFromInventory: true
             };
 
@@ -151,9 +150,16 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
             if (selectedDate) {
                 await loadDailySchedule(selectedDate.format('YYYY-MM-DD'));
             }
-
-            setIsModalVisible(false);
             Alert.alert(t('success'), `${selectedIntake.medicineName} ${t('markedTaken')}`);
+            setIsModalVisible(false);
+            if (selectedIntake.currentInventory <= selectedIntake.refillReminderThreshold) {
+                const currentInventory = selectedIntake.currentInventory - selectedIntake.scheduledAmount ;
+                const title = t('refillReminderTitle');
+                const message = t('refillReminderMessage')
+                    .replace('{{medicineName}}', selectedIntake.medicineName)
+                    .replace('{{currentInventory}}', currentInventory.toString());
+                Alert.alert(title,message);
+            }
         } catch (error) {
             console.error('Error taking medicine:', error);
             Alert.alert(t('error'), t('takeMedicineFailed'));
@@ -580,6 +586,19 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
                         </Text>
                     </View>
 
+                    <View className={`items-center ${flexDirection} mb-3`}>
+                        <Icon name='local-dining' size={20} color={theme.textSecondary} />
+                        <Text
+                            className={`text-base ml-2 ${textAlign}`}
+                            style={{color: theme.text}}
+                        >
+                            <Text style={{color: theme.textSecondary}}>
+                                {t('FoodInstruction')}:{" "}
+                            </Text>
+                            {selectedIntake.foodInstruction || t('Noinstruction')}
+                        </Text>
+                    </View>
+
                     {selectedIntake.status !== IntakeStatus.SCHEDULED && selectedIntake.actualDateTime && (
                         <View className={`items-center ${flexDirection} mb-3`}>
                             <Icon name="check-circle" size={20} color={getStatusColor(selectedIntake.status)}/>
@@ -590,6 +609,7 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
                                 <Text style={{color: theme.textSecondary}}>{t('actualTime')}: </Text>
                                 {formatTime(selectedIntake.actualDateTime)}
                             </Text>
+
                         </View>
                     )}
 
@@ -601,7 +621,7 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
                                 style={{color: theme.warning}}
                             >
                                 <Text style={{color: theme.textSecondary}}>{t('skipReason')}: </Text>
-                                {selectedIntake.foodInstruction}
+                                {selectedIntake.skipReason}
                             </Text>
                         </View>
                     )}
