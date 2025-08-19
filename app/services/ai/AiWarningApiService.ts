@@ -1,10 +1,9 @@
-// AiWarningApiService.ts
 import { AiWarningResponse, ApiError } from './AiWarningTypes';
 
 // Configuration (using same as userApi.ts)
 const COMPUTER_IP = '192.168.1.4';
 const API_BASE_URL = __DEV__
-    ? `http://${COMPUTER_IP}:8080`
+    ? `http://${COMPUTER_IP}:8081`
     : 'https://your-production-api.com';
 
 // API Response Handler
@@ -70,20 +69,6 @@ export class AiWarningApiService {
     // Get Unseen Warnings - GET /api/ai/warnings/user/{userId}/unseen
     async getUnseenWarnings(userId: string): Promise<AiWarningResponse[]> {
         return this.makeRequest<AiWarningResponse[]>(`/api/ai/warnings/user/${userId}/unseen`, {
-            method: 'GET',
-        });
-    }
-
-    // Get Urgent Warnings - GET /api/ai/warnings/user/{userId}/urgent
-    async getUrgentWarnings(userId: string): Promise<AiWarningResponse[]> {
-        return this.makeRequest<AiWarningResponse[]>(`/api/ai/warnings/user/${userId}/urgent`, {
-            method: 'GET',
-        });
-    }
-
-    // Get Warnings for Medicine - GET /api/ai/warnings/user/{userId}/medicine/{medicineId}
-    async getWarningsForMedicine(userId: string, medicineId: string): Promise<AiWarningResponse[]> {
-        return this.makeRequest<AiWarningResponse[]>(`/api/ai/warnings/user/${userId}/medicine/${medicineId}`, {
             method: 'GET',
         });
     }

@@ -116,7 +116,6 @@ export class MedicalSearchService {
         }
     }
 
-    // Generic search method
     async search(category: SearchCategory, query: string, limit: number = 10, useCache: boolean = true): Promise<SearchResponse> {
         switch (category) {
             case SearchCategory.MEDICINES:
@@ -129,43 +128,6 @@ export class MedicalSearchService {
                 throw new Error(`Unsupported search category: ${category}`);
         }
     }
-
-    // Debounced search for real-time search suggestions
-    async debouncedSearch(
-        category: SearchCategory,
-        query: string,
-        callback: (results: SearchResponse | null) => void,
-        delay: number = 300
-    ): Promise<void> {
-        const key = `${category}_${query}`;
-
-        // Clear existing timeout
-        const existingTimeout = this.searchTimeouts.get(key);
-        if (existingTimeout) {
-            clearTimeout(existingTimeout);
-        }
-
-        // Set new timeout
-        const timeout = setTimeout(async () => {
-            try {
-                if (query.length >= 2) {
-                    const results = await this.search(category, query);
-                    callback(results);
-                } else {
-                    callback(null);
-                }
-            } catch (error) {
-                console.log('Debounced search failed:', error);
-                callback(null);
-            } finally {
-                this.searchTimeouts.delete(key);
-            }
-        }, delay);
-
-        this.searchTimeouts.set(key, timeout);
-    }
-
-    // Get search suggestions with fallbacks
     async getSearchSuggestions(category: SearchCategory, query: string = ''): Promise<SearchSuggestion[]> {
         if (query.length >= 2) {
             try {
@@ -204,7 +166,6 @@ export class MedicalSearchService {
             }
         });
 
-        // Remove duplicates and limit results
         const uniqueSuggestions = suggestions.filter((suggestion, index, self) =>
             index === self.findIndex(s => s.value === suggestion.value)
         );
@@ -212,25 +173,12 @@ export class MedicalSearchService {
         return uniqueSuggestions.slice(0, 10);
     }
 
-    // Utility Methods
     async getRecentSearches(category: SearchCategory): Promise<string[]> {
         return MedicalSearchStorageService.getRecentSearches(category);
     }
 
     async getPopularSuggestions(category: SearchCategory): Promise<SearchSuggestion[]> {
         return MedicalSearchStorageService.getPopularSuggestions(category);
-    }
-
-    async clearRecentSearches(category: SearchCategory): Promise<void> {
-        return MedicalSearchStorageService.clearRecentSearches(category);
-    }
-
-    async clearAllSearchData(): Promise<void> {
-        return MedicalSearchStorageService.clearAllSearchData();
-    }
-
-    async clearExpiredCache(): Promise<void> {
-        return MedicalSearchStorageService.clearExpiredCache();
     }
 
     async getSearchHistory(): Promise<Array<{
@@ -242,13 +190,6 @@ export class MedicalSearchService {
         return MedicalSearchStorageService.getSearchHistory();
     }
 
-    // Cancel all pending searches
-    cancelPendingSearches(): void {
-        this.searchTimeouts.forEach((timeout) => {
-            clearTimeout(timeout);
-        });
-        this.searchTimeouts.clear();
-    }
 
     // Validate search query
     validateSearchQuery(query: string): { isValid: boolean; error?: string } {
@@ -271,7 +212,6 @@ export class MedicalSearchService {
         return { isValid: true };
     }
 
-    // Get fallback results when network fails
     private async getFallbackResults(category: SearchCategory, query: string): Promise<SearchResponse> {
         const recentSearches = await this.getRecentSearches(category);
         const matchingRecent = recentSearches.filter(recent =>
@@ -291,124 +231,6 @@ export class MedicalSearchService {
             hasMore: false,
             source: 'cache'
         };
-    }
-
-    // Pre-populate popular suggestions (call during app initialization)
-    async initializePopularSuggestions(): Promise<void> {
-        const commonMedicines: SearchSuggestion[] = [
-            { value: 'aspirin', displayName: 'Aspirin', description: 'Pain reliever and anti-inflammatory', source: 'default', category: SearchCategory.MEDICINES },
-            { value: 'ibuprofen', displayName: 'Ibuprofen', description: 'Anti-inflammatory drug', source: 'default', category: SearchCategory.MEDICINES },
-            { value: 'acetaminophen', displayName: 'Acetaminophen', description: 'Pain reliever and fever reducer', source: 'default', category: SearchCategory.MEDICINES },
-            { value: 'lisinopril', displayName: 'Lisinopril', description: 'Blood pressure medication', source: 'default', category: SearchCategory.MEDICINES },
-            { value: 'metformin', displayName: 'Metformin', description: 'Diabetes medication', source: 'default', category: SearchCategory.MEDICINES },
-        ];
-
-        const commonConditions: SearchSuggestion[] = [
-            { value: 'hypertension', displayName: 'Hypertension', description: 'High blood pressure', source: 'default', category: SearchCategory.CONDITIONS },
-            { value: 'diabetes', displayName: 'Diabetes', description: 'Blood sugar disorder', source: 'default', category: SearchCategory.CONDITIONS },
-            { value: 'asthma', displayName: 'Asthma', description: 'Respiratory condition', source: 'default', category: SearchCategory.CONDITIONS },
-            { value: 'arthritis', displayName: 'Arthritis', description: 'Joint inflammation', source: 'default', category: SearchCategory.CONDITIONS },
-            { value: 'depression', displayName: 'Depression', description: 'Mental health condition', source: 'default', category: SearchCategory.CONDITIONS },
-        ];
-
-        const commonAllergies: SearchSuggestion[] = [
-            { value: 'peanuts', displayName: 'Peanuts', description: 'Nut allergy', source: 'default', category: SearchCategory.ALLERGIES },
-            { value: 'shellfish', displayName: 'Shellfish', description: 'Seafood allergy', source: 'default', category: SearchCategory.ALLERGIES },
-            { value: 'penicillin', displayName: 'Penicillin', description: 'Antibiotic allergy', source: 'default', category: SearchCategory.ALLERGIES },
-            { value: 'latex', displayName: 'Latex', description: 'Rubber allergy', source: 'default', category: SearchCategory.ALLERGIES },
-            { value: 'pollen', displayName: 'Pollen', description: 'Seasonal allergy', source: 'default', category: SearchCategory.ALLERGIES },
-        ];
-
-        await Promise.all([
-            MedicalSearchStorageService.storePopularSuggestions(SearchCategory.MEDICINES, commonMedicines),
-            MedicalSearchStorageService.storePopularSuggestions(SearchCategory.CONDITIONS, commonConditions),
-            MedicalSearchStorageService.storePopularSuggestions(SearchCategory.ALLERGIES, commonAllergies),
-        ]);
-    }
-
-    // Get search analytics
-    async getSearchAnalytics(): Promise<{
-        totalSearches: number;
-        searchesByCategory: { [key in SearchCategory]: number };
-        topQueries: Array<{ query: string; count: number; category: SearchCategory }>;
-        recentActivity: Array<{ category: SearchCategory; query: string; timestamp: string }>;
-    }> {
-        const history = await this.getSearchHistory();
-
-        // Calculate total searches
-        const totalSearches = history.length;
-
-        // Group by category
-        const searchesByCategory = history.reduce((acc, search) => {
-            acc[search.category] = (acc[search.category] || 0) + 1;
-            return acc;
-        }, {} as { [key in SearchCategory]: number });
-
-        // Get top queries
-        const queryCount = history.reduce((acc, search) => {
-            const key = `${search.category}_${search.query}`;
-            acc[key] = (acc[key] || 0) + 1;
-            return acc;
-        }, {} as { [key: string]: number });
-
-        const topQueries = Object.entries(queryCount)
-            .map(([key, count]) => {
-                const [category, query] = key.split('_');
-                return { query, count, category: category as SearchCategory };
-            })
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 10);
-
-        // Recent activity (last 10 searches)
-        const recentActivity = history
-            .slice(0, 10)
-            .map(search => ({
-                category: search.category,
-                query: search.query,
-                timestamp: search.timestamp
-            }));
-
-        return {
-            totalSearches,
-            searchesByCategory,
-            topQueries,
-            recentActivity
-        };
-    }
-
-    // Check if search is trending (frequently searched recently)
-    async isTrendingQuery(category: SearchCategory, query: string): Promise<boolean> {
-        const history = await this.getSearchHistory();
-
-        // Look at searches from last 7 days
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const recentSearches = history.filter(search =>
-            search.category === category &&
-            new Date(search.timestamp) > weekAgo
-        );
-
-        // Count occurrences of this query
-        const queryCount = recentSearches.filter(search =>
-            search.query.toLowerCase() === query.toLowerCase()
-        ).length;
-
-        // Consider trending if searched 3+ times in past week
-        return queryCount >= 3;
-    }
-
-    // Format search suggestion for display
-    formatSearchSuggestion(suggestion: SearchSuggestion): string {
-        let formatted = suggestion.displayName;
-
-        if (suggestion.description) {
-            formatted += ` - ${suggestion.description}`;
-        }
-
-        if (suggestion.source === 'recent') {
-            formatted += ' (Recent)';
-        }
-
-        return formatted;
     }
 }
 

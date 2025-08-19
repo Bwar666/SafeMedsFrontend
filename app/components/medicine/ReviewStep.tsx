@@ -3,10 +3,9 @@ import {
     View,
     Text,
     ScrollView,
-    TouchableOpacity,
     Image,
 } from 'react-native';
-import { Check, Info, Edit3, Clock, Package, Utensils, Bell, BellOff, Pill, Calendar, Zap } from 'lucide-react-native';
+import { Check, Info, Clock, Package, Utensils, Bell, BellOff, Pill, Calendar, Zap } from 'lucide-react-native';
 import { MedicineForm, FrequencyType, FoodInstruction } from '@/app/services/medicine/medicine/MedicineServiceTypes';
 import {medicines} from "@/assets/images";
 import {useTheme} from "@/app/context/ThemeContext";
@@ -33,9 +32,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             foodInstruction: formData.foodInstruction || FoodInstruction.DOES_NOT_MATTER,
             scheduleDuration: formData.scheduleDuration || 150,
             notificationsEnabled: formData.notificationsEnabled !== undefined ? formData.notificationsEnabled : true,
-            missedDoseThresholdMinutes: formData.missedDoseThresholdMinutes !== undefined ? formData.missedDoseThresholdMinutes : 60,
+            missedDoseThresholdMinutes: formData.missedDoseThresholdMinutes !== undefined ? formData.missedDoseThresholdMinutes : 5,
             allowLateIntake: formData.allowLateIntake !== undefined ? formData.allowLateIntake : true,
-            lateIntakeWindowHours: formData.lateIntakeWindowHours !== undefined ? formData.lateIntakeWindowHours : 4,
             autoDeductInventory: formData.autoDeductInventory !== undefined ? formData.autoDeductInventory : false,
             currentInventory: formData.currentInventory !== null ? formData.currentInventory : null,
             totalInventory: formData.totalInventory !== null ? formData.totalInventory : null,
@@ -135,7 +133,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
         notifications: formData.notificationsEnabled === undefined,
         missedDoseThreshold: formData.missedDoseThresholdMinutes === undefined,
         lateIntake: formData.allowLateIntake === undefined,
-        lateIntakeWindow: formData.lateIntakeWindowHours === undefined,
         autoDeduct: formData.autoDeductInventory === undefined,
         currentInventory: formData.currentInventory === null,
         totalInventory: formData.totalInventory === null,
@@ -151,7 +148,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             [MedicineForm.TABLET]: 'pill',
             [MedicineForm.INJECTION]: 'injection',
             [MedicineForm.LIQUID]: 'liquid',
-            [MedicineForm.DROPS]: 'liquid',
+            [MedicineForm.DROP]: 'drop',
             [MedicineForm.INHALER]: 'inhaler',
             [MedicineForm.POWDER]: 'powder',
             [MedicineForm.PATCH]: 'patch',
@@ -378,22 +375,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                                     )}
                                 </Text>
                             </View>
-
-                            {defaults.allowLateIntake && (
-                                <View className="flex-row justify-between">
-                                    <Text style={{ color: theme.textSecondary }}>
-                                        {t('lateIntakeWindow') || 'Late intake window'}:
-                                    </Text>
-                                    <Text style={{ color: theme.text }} className="font-medium">
-                                        {defaults.lateIntakeWindowHours} {t('hours') || 'hours'}
-                                        {usingDefaults.lateIntakeWindow && (
-                                            <Text style={{ color: theme.warning }} className="text-xs">
-                                                {' '}({t('default') || 'default'})
-                                            </Text>
-                                        )}
-                                    </Text>
-                                </View>
-                            )}
                         </>
                     )}
                 </View>

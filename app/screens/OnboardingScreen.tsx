@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     NativeSyntheticEvent,
     NativeScrollEvent,
+    Image,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,9 +30,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
     const scrollViewRef = useRef<ScrollView>(null);
 
     const slides = [
-        { id: 1, title: t('onboarding1Title'), description: t('onboarding1Desc'), icon: '💊' },
-        { id: 2, title: t('onboarding2Title'), description: t('onboarding2Desc'), icon: '⚠️' },
-        { id: 3, title: t('onboarding3Title'), description: t('onboarding3Desc'), icon: '📱' },
+        { id: 1, title: t('onboarding1Title'), description: t('onboarding1Desc'), icon: 'logo' },
+        { id: 2, title: t('onboarding2Title'), description: t('onboarding2Desc'), icon: 'gemini' },
+        { id: 3, title: t('onboarding3Title'), description: t('onboarding3Desc'), icon: 'healthy' },
     ];
 
     const isLastSlide = currentSlideIndex === slides.length - 1;
@@ -94,7 +95,42 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
                 {slides.map((slide) => (
                     <View key={slide.id} style={{ width: screenWidth }} className="flex-1 justify-center items-center">
                         <View className="items-center px-10">
-                            <Text className="text-8xl mb-10">{slide.icon}</Text>
+                            {slide.icon === 'logo' ? (
+                                <Image
+                                    source={require('../../assets/images/clock.png')}
+                                    style={{
+                                        width: 250,
+                                        height: 250,
+                                        marginBottom: 40,
+                                        borderRadius: 10,
+                                    }}
+                                    resizeMode="contain"
+                                />
+                            ) : slide.icon === 'gemini' ? (
+                                <Image
+                                    source={require('../../assets/images/Google_Gemini_logo.png')}
+                                    style={{
+                                        width: 250,
+                                        height: 250,
+                                        marginBottom: 40,
+                                        borderRadius: 10,
+                                    }}
+                                    resizeMode="contain"
+                                />
+                            ) : slide.icon === 'healthy' ? (
+                                <Image
+                                    source={require('../../assets/images/healthy_people.png')}
+                                    style={{
+                                        width: 250,
+                                        height: 250,
+                                        marginBottom: 40,
+                                        borderRadius: 10,
+                                    }}
+                                    resizeMode="contain"
+                                />
+                            ) : (
+                                <Text className="text-8xl mb-10">{slide.icon}</Text>
+                            )}
                             <Text className={`text-3xl font-bold mb-5 text-center ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
                                 {slide.title}
                             </Text>

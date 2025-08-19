@@ -27,6 +27,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {medicines} from "@/assets/images";
 import {MedicineForm} from "@/app/services/medicine/medicine/MedicineServiceTypes";
+import {MedicineNotificationService} from "@/app/services/background/MedicineNotificationService";
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeTab'>;
 
@@ -60,7 +61,6 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
             console.error('Error loading user:', error);
         }
     };
-
     useEffect(() => {
         loadUserId();
     }, []);
@@ -70,6 +70,15 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
             loadDailySchedule(selectedDate.format('YYYY-MM-DD'));
         }
     }, [selectedDate, userId]);
+
+    useEffect(() => {
+        const initNotifications = async () => {
+            await MedicineNotificationService.requestPermissions();
+            await MedicineNotificationService.enableAutoCheck(userId);
+            await MedicineNotificationService.scheduleUpcomingReminders(userId);
+        };
+        initNotifications();
+    }, [userId]);
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -475,7 +484,7 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
             [MedicineForm.TABLET]: 'pill',
             [MedicineForm.INJECTION]: 'injection',
             [MedicineForm.LIQUID]: 'liquid',
-            [MedicineForm.DROPS]: 'liquid',
+            [MedicineForm.DROP]: 'drop',
             [MedicineForm.INHALER]: 'inhaler',
             [MedicineForm.POWDER]: 'powder',
             [MedicineForm.PATCH]: 'patch',

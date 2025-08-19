@@ -67,7 +67,6 @@ interface FormData {
     notificationsEnabled: boolean;
     missedDoseThresholdMinutes: number;
     allowLateIntake: boolean;
-    lateIntakeWindowHours: number;
 }
 
 const TOTAL_STEPS = 9;
@@ -107,7 +106,6 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
         notificationsEnabled: true,
         missedDoseThresholdMinutes: 60,
         allowLateIntake: true,
-        lateIntakeWindowHours: 4,
     });
 
     // Hardware back button handler
@@ -169,7 +167,6 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                     notificationsEnabled: med.notificationsEnabled !== undefined ? med.notificationsEnabled : true,
                     missedDoseThresholdMinutes: med.missedDoseThresholdMinutes || 60,
                     allowLateIntake: med.allowLateIntake !== undefined ? med.allowLateIntake : true,
-                    lateIntakeWindowHours: med.lateIntakeWindowHours || 4,
                 });
             } catch (error) {
                 console.error('Error fetching medicine:', error);
@@ -305,7 +302,6 @@ const EditMedicineScreen: React.FC<EditMedicineScreenProps> = ({ navigation, rou
                 notificationsEnabled: formData.notificationsEnabled,
                 missedDoseThresholdMinutes: formData.missedDoseThresholdMinutes,
                 allowLateIntake: formData.allowLateIntake,
-                lateIntakeWindowHours: formData.lateIntakeWindowHours,
             };
 
             // Simulate the loading steps like in AddMedicineScreen

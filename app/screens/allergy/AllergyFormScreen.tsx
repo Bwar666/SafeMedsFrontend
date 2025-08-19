@@ -14,6 +14,7 @@ import {
 import { X } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import type { AllergyResponse } from '../../services/allergy/AllergyTypes';
+import SearchDropdown from '../../components/SearchDropdown';
 
 interface AllergyFormScreenProps {
     allergy?: AllergyResponse | null;
@@ -23,6 +24,14 @@ interface AllergyFormScreenProps {
     isDark: boolean;
     theme: any;
     t: any;
+}
+
+// SearchResult interface (from SearchDropdown)
+interface SearchResult {
+    id: string;
+    name: string;
+    description?: string;
+    category?: string;
 }
 
 const AllergyFormScreen: React.FC<AllergyFormScreenProps> = ({
@@ -54,6 +63,14 @@ const AllergyFormScreen: React.FC<AllergyFormScreenProps> = ({
             return;
         }
         onSave({ name: name.trim(), description: description.trim() });
+    };
+
+    // Handle search result selection
+    const handleSearchResultSelect = (result: SearchResult) => {
+        setName(result.name);
+        if (result.description && !description.trim()) {
+            setDescription(result.description);
+        }
     };
 
     const isEditMode = !!allergy?.id;
@@ -107,16 +124,13 @@ const AllergyFormScreen: React.FC<AllergyFormScreenProps> = ({
                         <Text className={`text-sm font-medium mb-2`} style={{ color: contextTheme.textSecondary }}>
                             {t('allergyName')} *
                         </Text>
-                        <TextInput
+                        <SearchDropdown
                             value={name}
                             onChangeText={setName}
                             placeholder={t('allergyNamePlaceholder') || 'e.g., Penicillin'}
-                            placeholderTextColor={contextTheme.textSecondary}
-                            className={`p-4 rounded-xl border text-base`}
-                            style={{ borderColor: contextTheme.border, backgroundColor: contextTheme.card, color: contextTheme.text }}
-                            autoCapitalize="words"
-                            autoCorrect={false}
-                            returnKeyType="next"
+                            searchType="allergy"
+                            onSelectResult={handleSearchResultSelect}
+                            disabled={isSaving}
                         />
                     </View>
 

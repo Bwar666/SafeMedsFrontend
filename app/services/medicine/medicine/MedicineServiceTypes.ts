@@ -69,7 +69,7 @@ export enum MedicineForm {
     TABLET = 'TABLET',
     INJECTION = 'INJECTION',
     LIQUID = 'LIQUID',
-    DROPS = 'DROPS',
+    DROP = 'DROP',
     INHALER = 'INHALER',
     POWDER = 'POWDER',
     CREAM = 'CREAM',

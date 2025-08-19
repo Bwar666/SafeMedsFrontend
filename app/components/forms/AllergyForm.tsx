@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
+import SearchDropdown from '../../components/SearchDropdown'; // Import your SearchDropdown
 
 interface Allergy {
     name: string;
@@ -22,6 +23,14 @@ interface Allergy {
 interface AllergyFormProps {
     onSubmit: (allergies: Allergy[]) => void;
     onSkip: () => void;
+}
+
+// SearchResult interface (from SearchDropdown)
+interface SearchResult {
+    id: string;
+    name: string;
+    description?: string;
+    category?: string;
 }
 
 const AllergyForm: React.FC<AllergyFormProps> = ({ onSubmit, onSkip }) => {
@@ -68,6 +77,14 @@ const AllergyForm: React.FC<AllergyFormProps> = ({ onSubmit, onSkip }) => {
         setCurrentAllergy({ ...currentAllergy, name: allergyName });
     };
 
+    // Handle search result selection
+    const handleSearchResultSelect = (result: SearchResult) => {
+        setCurrentAllergy({
+            name: result.name,
+            description: result.description || ''
+        });
+    };
+
     const inputClass = `p-4 rounded-xl border text-base ${
         isDark ? 'bg-slate-800 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
     }`;
@@ -80,7 +97,7 @@ const AllergyForm: React.FC<AllergyFormProps> = ({ onSubmit, onSkip }) => {
         }`}>
             <View className="flex-1">
                 <Text className={`font-medium ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
-                    ⚠️ {allergy.name}
+                    {allergy.name}
                 </Text>
                 {allergy.description && (
                     <Text className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
@@ -133,17 +150,21 @@ const AllergyForm: React.FC<AllergyFormProps> = ({ onSubmit, onSkip }) => {
                     <View className="mb-6">
                         <Text className={labelClass}>{t('addAllergy') || 'Add Allergy'}</Text>
 
-                        <TextInput
-                            value={currentAllergy.name}
-                            onChangeText={(text) => setCurrentAllergy({...currentAllergy, name: text})}
-                            placeholder={t('allergyName') || 'Allergy name (e.g., Penicillin)'}
-                            placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                            className={`${inputClass} mb-3`}
-                            textAlign={isRTL ? 'right' : 'left'}
-                            autoCapitalize="words"
-                            returnKeyType="next"
-                        />
+                        {/* Search Dropdown for Allergy Name */}
+                        <View className="mb-3">
+                            <Text className={`text-xs mb-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                                {t('searchAllergies') || 'Search for medicine or allergy name'}
+                            </Text>
+                            <SearchDropdown
+                                value={currentAllergy.name}
+                                onChangeText={(text) => setCurrentAllergy({...currentAllergy, name: text})}
+                                placeholder={t('allergyName') || 'Type allergy name (e.g., Penicillin)'}
+                                searchType="allergy"
+                                onSelectResult={handleSearchResultSelect}
+                            />
+                        </View>
 
+                        {/* Description Input */}
                         <TextInput
                             value={currentAllergy.description}
                             onChangeText={(text) => setCurrentAllergy({...currentAllergy, description: text})}
@@ -178,21 +199,37 @@ const AllergyForm: React.FC<AllergyFormProps> = ({ onSubmit, onSkip }) => {
                     {/* Common Allergies Quick Add */}
                     <View className="mb-8">
                         <Text className={labelClass}>{t('commonAllergies') || 'Quick Add Common Allergies'}</Text>
+                        <Text className={`text-xs mb-3 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                            {t('commonAllergies') || 'Tap any item below to add it quickly'}
+                        </Text>
                         <View className="flex-row flex-wrap gap-2">
-                            {commonAllergies.map((allergy) => (
-                                <TouchableOpacity
-                                    key={allergy}
-                                    onPress={() => addQuickAllergy(allergy)}
-                                    className={`px-3 py-2 rounded-full border ${
-                                        isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white'
-                                    }`}
-                                    activeOpacity={0.7}
-                                >
-                                    <Text className={`text-sm ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
-                                        {allergy}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                            {commonAllergies.map((allergy) => {
+                                const isAlreadyAdded = allergies.some(
+                                    existing => existing.name.toLowerCase() === allergy.toLowerCase()
+                                );
+
+                                return (
+                                    <TouchableOpacity
+                                        key={allergy}
+                                        onPress={() => !isAlreadyAdded && addQuickAllergy(allergy)}
+                                        className={`px-3 py-2 rounded-full border ${
+                                            isAlreadyAdded
+                                                ? (isDark ? 'border-slate-600 bg-slate-700' : 'border-gray-300 bg-gray-200')
+                                                : (isDark ? 'border-slate-600 bg-slate-800' : 'border-gray-300 bg-white')
+                                        }`}
+                                        activeOpacity={isAlreadyAdded ? 1 : 0.7}
+                                        disabled={isAlreadyAdded}
+                                    >
+                                        <Text className={`text-sm ${
+                                            isAlreadyAdded
+                                                ? (isDark ? 'text-slate-500' : 'text-gray-400')
+                                                : (isDark ? 'text-slate-200' : 'text-gray-700')
+                                        }`}>
+                                            {isAlreadyAdded ? '✓ ' : '+ '}{allergy}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
                         </View>
                     </View>
 
@@ -226,8 +263,7 @@ const AllergyForm: React.FC<AllergyFormProps> = ({ onSubmit, onSkip }) => {
                 </ScrollView>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
-
-);
+    );
 };
 
 export default AllergyForm;

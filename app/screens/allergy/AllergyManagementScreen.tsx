@@ -8,19 +8,17 @@ import {
     Alert,
     SafeAreaView,
     ActivityIndicator,
-    StyleSheet
 } from 'react-native';
 import {
     ArrowLeft,
     Plus,
-    AlertTriangle,
     Search,
     MoreVertical
 } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { allergyService } from '../../services/allergy/AllergyService';
-import type { AllergyResponse } from '../../services/allergy/AllergyTypes';
+import { allergyService } from '@/app/services';
+import type { AllergyResponse } from '@/app/services/allergy';
 import { UserStorageService } from "@/app/services/user";
 import AllergyFormScreen from './AllergyFormScreen';
 import ActionMenu from '../../components/ActionMenu';
@@ -346,7 +344,6 @@ const AllergyManagementScreen: React.FC<AllergyManagementScreenProps> = ({ navig
                                     <View className="flex-row items-start justify-between">
                                         <View className="flex-1 mr-3">
                                             <View className="flex-row items-center mb-2">
-                                                <AlertTriangle size={16} color="#F59E0B" />
                                                 <Text className={`ml-2 font-semibold text-base`}
                                                       style={{ color: theme.text }}>
                                                     {allergy.name}
@@ -374,7 +371,6 @@ const AllergyManagementScreen: React.FC<AllergyManagementScreenProps> = ({ navig
                         </View>
                     ) : (
                         <View className="flex-1 items-center justify-center py-12">
-                            <AlertTriangle size={48} color={theme.textSecondary} />
                             <Text className={`text-lg font-semibold mt-4 mb-2`}
                                   style={{ color: theme.text }}>
                                 {searchQuery

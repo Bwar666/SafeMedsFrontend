@@ -34,6 +34,14 @@ export const medicines = {
         BL: require('./medicines/patch/patchBL.png'),
     },
 
+    drop:{
+        RE: require('./medicines/drop/dropRE.png'),
+        PR: require('./medicines/drop/dropPR.png'),
+        GR: require('./medicines/drop/dropGR.png'),
+        BR: require('./medicines/drop/dropBR.png'),
+        BL: require('./medicines/drop/dropBL.png'),
+    },
+
     // Liquid medicines
     liquid: {
         RE: require('./medicines/liquid/liquidRE.png'),
@@ -120,6 +128,7 @@ export type MedicineForm =
     | 'inhaler'
     | 'hardcapsule'
     | 'gummybear'
+    | 'drop'
     | 'gel'
     | 'cream'
     | 'capsule';
@@ -148,5 +157,4 @@ export const getAllMedicineForms = (): MedicineForm[] => {
 };
 
 
-// Export default for convenience
 export default images;

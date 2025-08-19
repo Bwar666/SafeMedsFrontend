@@ -61,7 +61,6 @@ interface FlexibleFormData {
     notificationsEnabled: boolean;
     missedDoseThresholdMinutes: number | null;
     allowLateIntake: boolean;
-    lateIntakeWindowHours: number;
 }
 
 // Base props interface for all steps
@@ -119,7 +118,6 @@ const AddMedicineScreen: React.FC<AddMedicineScreenProps> = ({ navigation, route
         notificationsEnabled: true,
         missedDoseThresholdMinutes: 60,
         allowLateIntake: true,
-        lateIntakeWindowHours: 4,
     });
 
     useEffect(() => {
@@ -229,7 +227,6 @@ const AddMedicineScreen: React.FC<AddMedicineScreenProps> = ({ navigation, route
             notificationsEnabled: data.notificationsEnabled,
             missedDoseThresholdMinutes: data.missedDoseThresholdMinutes || undefined,
             allowLateIntake: data.allowLateIntake,
-            lateIntakeWindowHours: data.lateIntakeWindowHours,
         };
     };
 

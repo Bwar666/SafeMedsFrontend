@@ -32,8 +32,6 @@ import {
 import { medicineService } from '../../services/medicine/medicine/MedicineService';
 import { UserStorageService } from "@/app/services/user";
 import { medicines } from '@/assets/images';
-import {transparent} from "react-native-paper/lib/typescript/styles/themes/v2/colors";
-
 
 type MedicineDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MedicineDetail'>;
 type MedicineDetailScreenRouteProp = RouteProp<RootStackParamList, 'MedicineDetail'>;
@@ -259,7 +257,7 @@ const getImageKey = (form: MedicineForm): keyof typeof medicines | null => {
         [MedicineForm.TABLET]: 'pill',
         [MedicineForm.INJECTION]: 'injection',
         [MedicineForm.LIQUID]: 'liquid',
-        [MedicineForm.DROPS]: 'liquid',
+        [MedicineForm.DROP]: 'drop',
         [MedicineForm.INHALER]: 'inhaler',
         [MedicineForm.POWDER]: 'powder',
         [MedicineForm.PATCH]: 'patch',
@@ -290,7 +288,7 @@ const MedicineDetailScreen: React.FC<MedicineDetailScreenProps> = ({ navigation,
             [MedicineForm.TABLET]: t('tablet') || 'Tablet',
             [MedicineForm.INJECTION]: t('injection') || 'Injection',
             [MedicineForm.LIQUID]: t('liquid') || 'Liquid',
-            [MedicineForm.DROPS]: t('drops') || 'Drops',
+            [MedicineForm.DROP]: t('drop') || 'Drop',
             [MedicineForm.INHALER]: t('inhaler') || 'Inhaler',
             [MedicineForm.POWDER]: t('powder') || 'Powder',
             [MedicineForm.PATCH]: t('patch') || 'Patch',

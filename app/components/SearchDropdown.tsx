@@ -27,7 +27,7 @@ interface SearchDropdownProps {
     value: string;
     onChangeText: (text: string) => void;
     placeholder: string;
-    searchType: 'medicine' | 'condition';
+    searchType: 'medicine' | 'condition' | 'allergy';
     onSelectResult?: (result: SearchResult) => void;
     disabled?: boolean;
 }
@@ -82,6 +82,18 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
         }
     };
 
+    const searchAllergies = async (query: string): Promise<SearchResult[]> => {
+        try {
+            const response = await medicalSearchService.searchAllergies(query, 10);
+            return response.suggestions.map(convertToSearchResult);
+        } catch (error) {
+            console.log('Allergy search failed, using fallback:', error);
+            // Fallback to popular suggestions
+            const suggestions = await medicalSearchService.getSearchSuggestions(SearchCategory.ALLERGIES, query);
+            return suggestions.map(convertToSearchResult);
+        }
+    };
+
     const performSearch = async (query: string) => {
         if (query.length < 2) {
             setSearchResults([]);
@@ -94,7 +106,9 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({
         try {
             const results = searchType === 'medicine'
                 ? await searchMedicines(query)
-                : await searchConditions(query);
+                : searchType === 'condition'
+                    ? await searchConditions(query)
+                    : await searchAllergies(query);
 
             setSearchResults(results);
             setShowDropdown(results.length > 0);

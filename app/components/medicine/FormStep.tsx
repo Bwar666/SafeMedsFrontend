@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, ScrollView, Image, ImageSourcePropType} from 'react-native';
 import {MedicineForm} from "@/app/services/medicine/medicine/MedicineServiceTypes";
-import {medicines, getMedicineFormImages} from '@/assets/images/index';
+import {medicines} from '@/assets/images/index';
 import {useTheme} from "@/app/context/ThemeContext";
 import {useLanguage} from "@/app/context/LanguageContext";
 
@@ -30,7 +30,7 @@ const FormStep: React.FC<FormStepProps> = ({
             [MedicineForm.TABLET]: 'pill',
             [MedicineForm.INJECTION]: 'injection',
             [MedicineForm.LIQUID]: 'liquid',
-            [MedicineForm.DROPS]: 'liquid',
+            [MedicineForm.DROP]: 'drop',
             [MedicineForm.INHALER]: 'inhaler',
             [MedicineForm.POWDER]: 'powder',
             [MedicineForm.PATCH]: 'patch',
@@ -77,10 +77,10 @@ const FormStep: React.FC<FormStepProps> = ({
             imageKey: 'liquid' as keyof typeof medicines
         },
         {
-            value: MedicineForm.DROPS,
+            value: MedicineForm.DROP,
             label: t('drops') || 'Drops',
             description: t('dropsDescription') || 'Eye/ear/nose drops',
-            imageKey: 'liquid' as keyof typeof medicines
+            imageKey: 'drop' as keyof typeof medicines
         },
         {
             value: MedicineForm.CREAM,

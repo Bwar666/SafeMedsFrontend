@@ -3,7 +3,7 @@ export const en = {
     welcome: 'Welcome to SafeMed',
     onboarding1Title: 'Track Your Medicines',
     onboarding1Desc: 'Never miss a dose with smart reminders and scheduling',
-    onboarding2Title: 'ai Health Warnings',
+    onboarding2Title: 'AI Health Warnings',
     onboarding2Desc: 'Get intelligent alerts about drug interactions and conflicts',
     onboarding3Title: 'Stay Healthy',
     onboarding3Desc: 'Monitor your medication history and health progress',
@@ -230,7 +230,7 @@ export const en = {
 
     // Navigation
     warnings: 'Warnings',
-    aiWarnings: 'ai Warnings',
+    aiWarnings: 'AI Warnings',
 
     // Home Screen
     goodMorning: 'Good Morning',

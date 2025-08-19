@@ -1,4 +1,3 @@
-// AllergyTypes.ts
 export interface AllergyRequest {
     name: string;
     description?: string;

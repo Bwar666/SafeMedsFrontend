@@ -1,4 +1,3 @@
-// medicineApiService.ts - Medicine API Service (pure API communication)
 import {
     MedicineRequest,
     MedicineResponse,
@@ -8,7 +7,7 @@ import {
 // Configuration (using same as userApi.ts)
 const COMPUTER_IP = '192.168.1.4';
 const API_BASE_URL = __DEV__
-    ? `http://${COMPUTER_IP}:8080`
+    ? `http://${COMPUTER_IP}:8081`
     : 'https://your-production-api.com';
 
 // API Response Handler (reusing from userApi pattern)

@@ -1,4 +1,3 @@
-// allergyStorageService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AllergyResponse } from './AllergyTypes';
 
@@ -30,21 +29,5 @@ export class AllergyStorageService {
     // Update last sync timestamp
     static async updateLastSync(): Promise<void> {
         await AsyncStorage.setItem(this.KEYS.LAST_SYNC, new Date().toISOString());
-    }
-
-    // Get last sync timestamp
-    static async getLastSync(): Promise<Date | null> {
-        try {
-            const data = await AsyncStorage.getItem(this.KEYS.LAST_SYNC);
-            return data ? new Date(data) : null;
-        } catch {
-            return null;
-        }
-    }
-
-    // Clear allergy cache for user
-    static async clearAllergyCache(userId: string): Promise<void> {
-        const key = `${this.KEYS.ALLERGIES}_${userId}`;
-        await AsyncStorage.removeItem(key);
     }
 }

@@ -1,4 +1,3 @@
-// medicineUsageService.ts
 import {
     TakeMedicineRequest,
     SkipMedicineRequest,
@@ -13,7 +12,6 @@ import { MedicineUsageApiService } from './MedicineUsageApiService';
 import { MedicineUsageStorageService } from './MedicineUsageStorageService';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// High-level Medicine Usage Service with caching and offline support
 export class MedicineUsageService {
     private apiService: MedicineUsageApiService;
 
@@ -34,7 +32,6 @@ export class MedicineUsageService {
     async skipMedicine(userId: string, request: SkipMedicineRequest): Promise<MedicineUsageResponse> {
         const response = await this.apiService.skipMedicine(userId, request);
 
-        // Clear relevant caches
         await this.invalidateScheduleCache(userId);
 
         return response;
@@ -74,10 +71,6 @@ export class MedicineUsageService {
         return this.getDailySchedule(userId, today, useCache);
     }
 
-    async getWeeklySchedule(userId: string, startDate: string): Promise<DailyMedicineSchedule[]> {
-        return this.apiService.getWeeklySchedule(userId, startDate);
-    }
-
     async getUpcomingIntakes(userId: string, hours: number = 24, useCache: boolean = true): Promise<IntakeEvent[]> {
         try {
             const intakes = await this.apiService.getUpcomingIntakes(userId, hours);
@@ -92,20 +85,6 @@ export class MedicineUsageService {
         }
     }
 
-    async getOverdueIntakes(userId: string, useCache: boolean = true): Promise<IntakeEvent[]> {
-        try {
-            const intakes = await this.apiService.getOverdueIntakes(userId);
-            await MedicineUsageStorageService.storeOverdueIntakes(userId, intakes);
-            return intakes;
-        } catch (error) {
-            if (useCache) {
-                console.log('Using cached overdue intakes due to network error');
-                return await MedicineUsageStorageService.getStoredOverdueIntakes(userId);
-            }
-            throw error;
-        }
-    }
-
     // Inventory Operations
     async updateInventory(userId: string, medicineId: string, request: InventoryUpdateRequest): Promise<void> {
         await this.apiService.updateInventory(userId, medicineId, request);
@@ -115,74 +94,17 @@ export class MedicineUsageService {
         await AsyncStorage.removeItem(key);
     }
 
-    async getLowInventoryMedicines(userId: string, useCache: boolean = true): Promise<MedicineResponse[]> {
-        try {
-            const medicines = await this.apiService.getLowInventoryMedicines(userId);
-            await MedicineUsageStorageService.storeLowInventoryMedicines(userId, medicines);
-            return medicines;
-        } catch (error) {
-            if (useCache) {
-                console.log('Using cached low inventory medicines due to network error');
-                return await MedicineUsageStorageService.getStoredLowInventoryMedicines(userId);
-            }
-            throw error;
-        }
-    }
-
-    // Maintenance Operations
-    async processMissedDoses(userId: string): Promise<void> {
-        await this.apiService.processMissedDoses(userId);
-        await this.invalidateScheduleCache(userId);
-    }
 
     async markEventAsMissed(userId: string, intakeEventId: string, automatic: boolean = false): Promise<void> {
         await this.apiService.markEventAsMissed(userId, intakeEventId, automatic);
         await this.invalidateScheduleCache(userId);
     }
 
-    // Utility Methods
-    async refreshAllUsageData(userId: string): Promise<void> {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            await Promise.all([
-                this.getDailySchedule(userId, today, false),
-                this.getUpcomingIntakes(userId, 24, false),
-                this.getOverdueIntakes(userId, false),
-                this.getLowInventoryMedicines(userId, false),
-            ]);
-        } catch (error) {
-            console.error('Error refreshing usage data:', error);
-            throw error;
-        }
-    }
-
-    async clearCache(userId: string): Promise<void> {
-        await MedicineUsageStorageService.clearUsageCache(userId);
-    }
-
-    async getLastSyncTime(): Promise<Date | null> {
-        return MedicineUsageStorageService.getLastSync();
-    }
-
-    // Get cached data only
     async getCachedTodaySchedule(userId: string): Promise<DailyMedicineSchedule | null> {
         const today = new Date().toISOString().split('T')[0];
         return MedicineUsageStorageService.getStoredDailySchedule(userId, today);
     }
 
-    async getCachedUpcomingIntakes(userId: string): Promise<IntakeEvent[]> {
-        return MedicineUsageStorageService.getStoredUpcomingIntakes(userId);
-    }
-
-    async getCachedOverdueIntakes(userId: string): Promise<IntakeEvent[]> {
-        return MedicineUsageStorageService.getStoredOverdueIntakes(userId);
-    }
-
-    async getCachedLowInventoryMedicines(userId: string): Promise<MedicineResponse[]> {
-        return MedicineUsageStorageService.getStoredLowInventoryMedicines(userId);
-    }
-
-    // Helper method to invalidate schedule-related caches
     private async invalidateScheduleCache(userId: string): Promise<void> {
         const today = new Date().toISOString().split('T')[0];
 
@@ -197,40 +119,6 @@ export class MedicineUsageService {
         ]);
     }
 
-    // Check if there are any overdue intakes
-    async hasOverdueIntakes(userId: string, useCache: boolean = true): Promise<boolean> {
-        const overdueIntakes = await this.getOverdueIntakes(userId, useCache);
-        return overdueIntakes.length > 0;
-    }
-
-    // Get count of pending intakes for today
-    async getTodayPendingCount(userId: string, useCache: boolean = true): Promise<number> {
-        const todaySchedule = await this.getTodaySchedule(userId, useCache);
-        return todaySchedule.totalPending;
-    }
-
-    // Get adherence rate for today
-    async getTodayAdherenceRate(userId: string, useCache: boolean = true): Promise<number> {
-        const todaySchedule = await this.getTodaySchedule(userId, useCache);
-        const { totalScheduled, totalTaken } = todaySchedule;
-
-        if (totalScheduled === 0) return 0;
-        return Math.round((totalTaken / totalScheduled) * 100);
-    }
-
-    // Check if any medicines need refill
-    async needsInventoryRefill(userId: string, useCache: boolean = true): Promise<boolean> {
-        const lowInventoryMedicines = await this.getLowInventoryMedicines(userId, useCache);
-        return lowInventoryMedicines.length > 0;
-    }
-
-    // Get intake events by status for today
-    async getTodayIntakesByStatus(userId: string, status: IntakeStatus, useCache: boolean = true): Promise<IntakeEvent[]> {
-        const todaySchedule = await this.getTodaySchedule(userId, useCache);
-        return todaySchedule.intakeEvents.filter(event => event.status === status);
-    }
-
-    // Validate take medicine request
     validateTakeMedicineRequest(request: TakeMedicineRequest): { isValid: boolean; error?: string } {
         if (!request.intakeEventId) {
             return { isValid: false, error: 'Intake event ID is required please update your inventory.' };
@@ -253,7 +141,6 @@ export class MedicineUsageService {
         return { isValid: true };
     }
 
-    // Validate skip medicine request
     validateSkipMedicineRequest(request: SkipMedicineRequest): { isValid: boolean; error?: string } {
         if (!request.intakeEventId) {
             return { isValid: false, error: 'Intake event ID is required' };
@@ -261,18 +148,6 @@ export class MedicineUsageService {
 
         if (!request.skipReason || request.skipReason.trim().length === 0) {
             return { isValid: false, error: 'Skip reason is required' };
-        }
-
-        return { isValid: true };
-    }
-    // Validate inventory update request
-    validateInventoryUpdateRequest(request: InventoryUpdateRequest): { isValid: boolean; error?: string } {
-        if (request.newInventoryAmount === undefined || request.newInventoryAmount === null) {
-            return { isValid: false, error: 'New inventory amount is required' };
-        }
-
-        if (request.newInventoryAmount < 0) {
-            return { isValid: false, error: 'Inventory amount cannot be negative' };
         }
 
         return { isValid: true };

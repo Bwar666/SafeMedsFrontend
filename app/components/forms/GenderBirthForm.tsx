@@ -8,8 +8,8 @@ import {
     Keyboard,
     Dimensions,
     Platform,
-    Modal
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -26,6 +26,8 @@ const GenderBirthForm: React.FC<GenderBirthFormProps> = ({ onSubmit }) => {
     const [selectedGender, setSelectedGender] = useState<Gender | null>(null);
     const [birthDate, setBirthDate] = useState('');
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [showManualInput, setShowManualInput] = useState(false);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
     const [screenHeight] = useState(Dimensions.get('window').height);
 
@@ -72,104 +74,24 @@ const GenderBirthForm: React.FC<GenderBirthFormProps> = ({ onSubmit }) => {
 
     const handleDateChange = (text: string) => setBirthDate(formatDate(text));
 
-    const generateOptions = () => {
-        const currentYear = new Date().getFullYear();
-        const years = Array.from({ length: currentYear - 1899 }, (_, i) => currentYear - i);
-        const months = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
-        const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0'));
-        return { years, months, days };
+    // Handle native date picker change
+    const handleNativeDateChange = (event: any, selectedDate?: Date) => {
+        if (Platform.OS === 'android') {
+            setShowDatePicker(false);
+        }
+
+        if (selectedDate) {
+            setSelectedDate(selectedDate);
+            const formattedDate = selectedDate.toISOString().split('T')[0];
+            setBirthDate(formattedDate);
+        }
     };
 
-    const DatePickerModal = () => {
-        const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-        const [selectedMonth, setSelectedMonth] = useState('01');
-        const [selectedDay, setSelectedDay] = useState('01');
-        const { years, months, days } = generateOptions();
-
-        const handleDateSelect = () => {
-            setBirthDate(`${selectedYear}-${selectedMonth}-${selectedDay}`);
-            setShowDatePicker(false);
-        };
-
-        const PickerColumn = ({
-                                  title,
-                                  options,
-                                  selectedValue,
-                                  onSelect
-                              }: {
-            title: string;
-            options: (string | number)[];
-            selectedValue: string;
-            onSelect: (value: string) => void;
-        }) => (
-            <View className="flex-1">
-                <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
-                    {title}
-                </Text>
-                <ScrollView className="h-40 border rounded-lg" showsVerticalScrollIndicator={false}>
-                    {options.map((option) => (
-                        <TouchableOpacity
-                            key={option}
-                            onPress={() => onSelect(option.toString())}
-                            className={`p-3 ${selectedValue === option.toString() ? 'bg-indigo-500' : ''}`}
-                        >
-                            <Text className={`text-center ${
-                                selectedValue === option.toString()
-                                    ? 'text-white font-semibold'
-                                    : isDark ? 'text-slate-100' : 'text-gray-800'
-                            }`}>
-                                {option}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
-        );
-
-        return (
-            <Modal visible={showDatePicker} transparent animationType="slide">
-                <View className="flex-1 justify-end bg-black/50">
-                    <View className={`${isDark ? 'bg-slate-800' : 'bg-white'} rounded-t-3xl p-6`}>
-                        <View className="flex-row justify-between items-center mb-6">
-                            <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                                <Text className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                                    {t('cancel') || 'Cancel'}
-                                </Text>
-                            </TouchableOpacity>
-                            <Text className={`text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
-                                {t('selectBirthDate') || 'Select Birth Date'}
-                            </Text>
-                            <TouchableOpacity onPress={handleDateSelect}>
-                                <Text className="text-lg text-indigo-500 font-semibold">
-                                    {t('done') || 'Done'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <View className="flex-row gap-4 mb-6">
-                            <PickerColumn
-                                title={t('year') || 'Year'}
-                                options={years}
-                                selectedValue={selectedYear}
-                                onSelect={setSelectedYear}
-                            />
-                            <PickerColumn
-                                title={t('month') || 'Month'}
-                                options={months}
-                                selectedValue={selectedMonth}
-                                onSelect={setSelectedMonth}
-                            />
-                            <PickerColumn
-                                title={t('day') || 'Day'}
-                                options={days}
-                                selectedValue={selectedDay}
-                                onSelect={setSelectedDay}
-                            />
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-        );
+    // Handle iOS date picker confirmation
+    const handleIOSDateConfirm = () => {
+        setShowDatePicker(false);
+        const formattedDate = selectedDate.toISOString().split('T')[0];
+        setBirthDate(formattedDate);
     };
 
     const isValid = selectedGender !== null && isValidDate(birthDate);
@@ -186,6 +108,13 @@ const GenderBirthForm: React.FC<GenderBirthFormProps> = ({ onSubmit }) => {
         { value: 'FEMALE' as Gender, label: t('female') || 'Female', icon: '👩' },
         { value: 'OTHER' as Gender, label: t('other') || 'Other', icon: '👤' },
     ];
+
+    // Get maximum date (today)
+    const maxDate = new Date();
+
+    // Get minimum date (120 years ago)
+    const minDate = new Date();
+    minDate.setFullYear(minDate.getFullYear() - 120);
 
     return (
         <View
@@ -248,34 +177,21 @@ const GenderBirthForm: React.FC<GenderBirthFormProps> = ({ onSubmit }) => {
                         {t('birthDate') || 'Birth Date'} *
                     </Text>
 
-                    <TextInput
-                        value={birthDate}
-                        onChangeText={handleDateChange}
-                        placeholder="YYYY-MM-DD"
-                        placeholderTextColor={isDark ? '#64748B' : '#9CA3AF'}
-                        className={`p-4 rounded-xl border text-base mb-3 ${
-                            isDark ? 'bg-slate-800 border-slate-600 text-slate-100' : 'bg-white border-gray-300 text-gray-800'
-                        }`}
-                        textAlign={isRTL ? 'right' : 'left'}
-                        keyboardType="numeric"
-                        maxLength={10}
-                        returnKeyType="done"
-                        onSubmitEditing={handleSubmit}
-                        blurOnSubmit={false}
-                    />
-
                     <TouchableOpacity
                         onPress={() => setShowDatePicker(true)}
-                        className={`p-4 rounded-xl border border-dashed ${
-                            isDark ? 'border-slate-600 bg-slate-800/50' : 'border-gray-300 bg-gray-50'
+                        className={`p-4 rounded-xl border text-base mb-3 ${
+                            isDark ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-300'
                         }`}
                         activeOpacity={0.7}
                     >
-                        <Text className={`text-center ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                            📅 {t('selectFromCalendar') || 'Select from calendar'}
+                        <Text className={`${
+                            birthDate
+                                ? (isDark ? 'text-slate-100' : 'text-gray-800')
+                                : (isDark ? 'text-slate-400' : 'text-gray-400')
+                        } ${isRTL ? 'text-right' : 'text-left'}`}>
+                            {birthDate || 'YYYY-MM-DD'}
                         </Text>
                     </TouchableOpacity>
-
                     <Text className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                         {t('birthDateFormat') || 'Format: YYYY-MM-DD (e.g., 1990-05-15)'}
                     </Text>
@@ -305,7 +221,57 @@ const GenderBirthForm: React.FC<GenderBirthFormProps> = ({ onSubmit }) => {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
-            <DatePickerModal />
+
+            {/* Native Date Picker */}
+            {showDatePicker && (
+                <View>
+                    {Platform.OS === 'ios' && (
+                        <View
+                            className={`absolute bottom-0 left-0 right-0 ${isDark ? 'bg-slate-800' : 'bg-white'} border-t`}
+                            style={{ paddingBottom: 34 }} // Safe area for iPhone
+                        >
+                            {/* iOS Header */}
+                            <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+                                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                                    <Text className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                        {t('cancel') || 'Cancel'}
+                                    </Text>
+                                </TouchableOpacity>
+                                <Text className={`text-lg font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
+                                    {t('selectBirthDate') || 'Select Birth Date'}
+                                </Text>
+                                <TouchableOpacity onPress={handleIOSDateConfirm}>
+                                    <Text className="text-lg text-indigo-500 font-semibold">
+                                        {t('done') || 'Done'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* iOS Date Picker */}
+                            <DateTimePicker
+                                value={selectedDate}
+                                mode="date"
+                                display="spinner"
+                                onChange={handleNativeDateChange}
+                                maximumDate={maxDate}
+                                minimumDate={minDate}
+                                style={{ backgroundColor: isDark ? '#1E293B' : '#FFFFFF' }}
+                            />
+                        </View>
+                    )}
+
+                    {Platform.OS === 'android' && (
+                        <DateTimePicker
+                            value={selectedDate}
+                            mode="date"
+                            display="default"
+                            onChange={handleNativeDateChange}
+                            maximumDate={maxDate}
+                            minimumDate={minDate}
+                        />
+                    )}
+                </View>
+            )}
         </View>
     );
 };

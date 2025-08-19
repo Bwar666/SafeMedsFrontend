@@ -13,7 +13,7 @@ import {
 // Configuration (using same as userApi.ts)
 const COMPUTER_IP = '192.168.1.4';
 const API_BASE_URL = __DEV__
-    ? `http://${COMPUTER_IP}:8080`
+    ? `http://${COMPUTER_IP}:8081`
     : 'https://your-production-api.com';
 
 // API Response Handler (reusing from userApi pattern)
@@ -114,12 +114,6 @@ export class MedicineUsageApiService {
         });
     }
 
-    // Get Weekly Schedule - GET /api/users/{userId}/medicines/schedule/weekly
-    async getWeeklySchedule(userId: string, startDate: string): Promise<DailyMedicineSchedule[]> {
-        return this.makeRequest<DailyMedicineSchedule[]>(`/api/users/${userId}/medicines/schedule/weekly?startDate=${startDate}`, {
-            method: 'GET',
-        });
-    }
 
     // Get Upcoming Intakes - GET /api/users/{userId}/medicines/upcoming
     async getUpcomingIntakes(userId: string, hours: number = 24): Promise<IntakeEvent[]> {
@@ -128,12 +122,6 @@ export class MedicineUsageApiService {
         });
     }
 
-    // Get Overdue Intakes - GET /api/users/{userId}/medicines/overdue
-    async getOverdueIntakes(userId: string): Promise<IntakeEvent[]> {
-        return this.makeRequest<IntakeEvent[]>(`/api/users/${userId}/medicines/overdue`, {
-            method: 'GET',
-        });
-    }
 
     // Inventory Operations
     // Update Inventory - PUT /api/users/{userId}/medicines/{medicineId}/inventory
@@ -141,21 +129,6 @@ export class MedicineUsageApiService {
         return this.makeRequest<void>(`/api/users/${userId}/medicines/${medicineId}/inventory`, {
             method: 'PUT',
             body: JSON.stringify(request),
-        });
-    }
-
-    // Get Low Inventory Medicines - GET /api/users/{userId}/medicines/low-inventory
-    async getLowInventoryMedicines(userId: string): Promise<MedicineResponse[]> {
-        return this.makeRequest<MedicineResponse[]>(`/api/users/${userId}/medicines/low-inventory`, {
-            method: 'GET',
-        });
-    }
-
-    // Maintenance Operations
-    // Process Missed Doses - POST /api/users/{userId}/medicines/process-missed
-    async processMissedDoses(userId: string): Promise<void> {
-        return this.makeRequest<void>(`/api/users/${userId}/medicines/process-missed`, {
-            method: 'POST',
         });
     }
 

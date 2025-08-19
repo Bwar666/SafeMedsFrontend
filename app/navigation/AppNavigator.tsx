@@ -1,8 +1,8 @@
-
+// AppNavigator.tsx - Complete fixed version
 import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -15,8 +15,7 @@ import AIWarningDetailScreen from '../screens/ai/AIWarningDetailScreen';
 import ProfileManagementScreenScreen from '../screens/user/ProfileManagementScreen';
 import AllergyManagementScreen from '../screens/allergy/AllergyManagementScreen';
 import { AiWarningResponse } from "@/app/services/ai";
-import {UserStorageService} from "@/app/services/user";
-
+import { UserStorageService } from "@/app/services/user";
 
 // Updated Navigation Types
 export type RootStackParamList = {
@@ -37,6 +36,7 @@ export type RootStackParamList = {
     AIWarningDetail: {
         warning: AiWarningResponse;
     };
+    TestPermission: undefined; // ADDED for testing
 };
 
 type RouteKey = keyof RootStackParamList;
@@ -47,7 +47,11 @@ const Stack = createStackNavigator<RootStackParamList>();
 const LoadingScreen: React.FC<{ isDark: boolean }> = ({ isDark }) => (
     <View className={`flex-1 justify-center items-center ${isDark ? 'bg-slate-900' : 'bg-blue-50'}`}>
         <View className="items-center">
-            <Text className="text-6xl mb-6">💊</Text>
+            <Image
+                source={require('../../assets/images/playstore.png')}
+                style={{ width: 120, height: 120, marginBottom: 24, borderRadius: 20 }}
+                resizeMode="contain"
+            />
             <Text className={`text-2xl font-bold mb-2 ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>
                 SafeMed
             </Text>
@@ -62,6 +66,18 @@ const LoadingScreen: React.FC<{ isDark: boolean }> = ({ isDark }) => (
         </View>
     </View>
 );
+
+// Test Permission Screen Component - ADDED
+const TestPermissionScreen: React.FC = () => {
+    return (
+        <View className="flex-1 justify-center p-4 bg-white">
+            <Text className="text-xl font-bold mb-4 text-center">Permission Test Screen</Text>
+            <Text className="text-center text-gray-600">
+                Navigate to this screen to test permissions
+            </Text>
+        </View>
+    );
+};
 
 // Main Navigator Component
 const AppNavigator: React.FC = () => {
@@ -104,6 +120,7 @@ const AppNavigator: React.FC = () => {
             setTimeout(() => setIsLoading(false), 1000);
         }
     };
+
     const screenOptions = {
         headerShown: false,
         gestureEnabled: false, // Disable gestures by default
@@ -135,34 +152,43 @@ const AppNavigator: React.FC = () => {
             <Stack.Screen
                 name="AddMedicine"
                 component={AddMedicineScreen}
-                options={{ animation: "fade_from_bottom"}}
+                options={{ animation: "fade_from_bottom" }}
             />
             <Stack.Screen
                 name="Profile"
                 component={ProfileManagementScreenScreen}
-                options={{ animation: "fade"}}
+                options={{ animation: "fade" }}
             />
             <Stack.Screen
                 name="AllergyManagement"
                 component={AllergyManagementScreen}
-                options={{ animation: "fade"}}
+                options={{ animation: "fade" }}
             />
             <Stack.Screen
                 name="MedicineDetail"
                 component={MedicineDetailScreen}
-                options={{ animation: "fade_from_bottom"}}
-
+                options={{ animation: "fade_from_bottom" }}
             />
             <Stack.Screen
                 name="EditMedicine"
                 component={EditMedicineScreen}
-                options={{ animation: "fade_from_bottom"}}
+                options={{ animation: "fade_from_bottom" }}
             />
             <Stack.Screen
                 name="AIWarningDetail"
                 component={AIWarningDetailScreen}
-                options={{ animation: "fade_from_bottom"}}
+                options={{ animation: "fade_from_bottom" }}
+            />
 
+            {/* Test Screen - ADDED for permission testing */}
+            <Stack.Screen
+                name="TestPermission"
+                component={TestPermissionScreen}
+                options={{
+                    animation: "fade_from_bottom",
+                    headerShown: true,
+                    title: "Test Permissions"
+                }}
             />
         </Stack.Navigator>
     );

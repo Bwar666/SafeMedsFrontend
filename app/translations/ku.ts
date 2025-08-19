@@ -257,7 +257,7 @@ export const ku = {
 
     // AI Warnings Screen
     aiProtection: 'پاراستنی AI چالاکە',
-    aiProtectionDesc: 'چاودێری دەرمانەکانت بۆ مەترسییەکانی گونجاو',
+    aiProtectionDesc: 'چاودێری دەرمانەکانت بۆ مەترسییەکان',
     noWarnings: 'هیچ ئاگاداریەک نییە',
     noWarningsDesc: 'دەرمانەکانت سالمن و هیچ ئاگاداریەک نادیارە',
 

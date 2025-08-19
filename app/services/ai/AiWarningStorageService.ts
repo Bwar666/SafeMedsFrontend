@@ -1,4 +1,3 @@
-// AiWarningStorageService.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AiWarningResponse } from './AiWarningTypes';
 
@@ -46,12 +45,6 @@ export class AiWarningStorageService {
         }
     }
 
-    // Store urgent warnings
-    static async storeUrgentWarnings(userId: string, warnings: AiWarningResponse[]): Promise<void> {
-        const key = `${this.KEYS.URGENT_WARNINGS}_${userId}`;
-        await AsyncStorage.setItem(key, JSON.stringify(warnings));
-    }
-
     // Get stored urgent warnings
     static async getStoredUrgentWarnings(userId: string): Promise<AiWarningResponse[]> {
         try {
@@ -66,25 +59,5 @@ export class AiWarningStorageService {
     // Update last sync
     static async updateLastSync(): Promise<void> {
         await AsyncStorage.setItem(this.KEYS.LAST_SYNC, new Date().toISOString());
-    }
-
-    // Get last sync
-    static async getLastSync(): Promise<Date | null> {
-        try {
-            const data = await AsyncStorage.getItem(this.KEYS.LAST_SYNC);
-            return data ? new Date(data) : null;
-        } catch {
-            return null;
-        }
-    }
-
-    // Clear cache
-    static async clearWarningsCache(userId: string): Promise<void> {
-        const keys = [
-            `${this.KEYS.ALL_WARNINGS}_${userId}`,
-            `${this.KEYS.UNSEEN_WARNINGS}_${userId}`,
-            `${this.KEYS.URGENT_WARNINGS}_${userId}`,
-        ];
-        await AsyncStorage.multiRemove(keys);
     }
 }

@@ -2,6 +2,7 @@
 import { MedicineApiService } from './MedicineApiService';
 import { MedicineStorageService } from './MedicineSrorageService';
 import { MedicineRequest, MedicineResponse } from './MedicineServiceTypes';
+import {MedicineNotificationService} from "@/app/services/background/MedicineNotificationService";
 
 // High-level Medicine Service with caching and offline support
 export class MedicineService {
@@ -43,7 +44,7 @@ export class MedicineService {
     // Create new medicine
     async createMedicine(userId: string, medicineData: MedicineRequest): Promise<MedicineResponse> {
         const medicine = await this.apiService.createMedicine(userId, medicineData);
-
+        await MedicineNotificationService.refreshNotifications(userId);
         // Update cache with new medicine
         const cachedMedicines = await MedicineStorageService.getStoredMedicines(userId);
         cachedMedicines.push(medicine);
@@ -55,8 +56,7 @@ export class MedicineService {
     // Update existing medicine
     async updateMedicine(userId: string, medicineId: string, medicineData: MedicineRequest): Promise<MedicineResponse> {
         const updatedMedicine = await this.apiService.updateMedicine(userId, medicineId, medicineData);
-
-        // Update cache
+        await MedicineNotificationService.scheduleUpcomingReminders(userId);
         const cachedMedicines = await MedicineStorageService.getStoredMedicines(userId);
         const index = cachedMedicines.findIndex(m => m.id === medicineId);
         if (index !== -1) {
@@ -70,37 +70,10 @@ export class MedicineService {
     // Delete medicine
     async deleteMedicine(userId: string, medicineId: string): Promise<void> {
         await this.apiService.deleteMedicine(userId, medicineId);
-
-        // Remove from cache
+        await MedicineNotificationService.refreshNotifications(userId);
         const cachedMedicines = await MedicineStorageService.getStoredMedicines(userId);
         const filteredMedicines = cachedMedicines.filter(m => m.id !== medicineId);
         await MedicineStorageService.storeMedicines(userId, filteredMedicines);
-    }
-
-    // Refresh medicines from server
-    async refreshMedicines(userId: string): Promise<MedicineResponse[]> {
-        return this.getMedicines(userId, false);
-    }
-
-    // Clear cache
-    async clearCache(userId: string): Promise<void> {
-        await MedicineStorageService.clearMedicineCache(userId);
-    }
-
-    // Get cached medicines only
-    async getCachedMedicines(userId: string): Promise<MedicineResponse[]> {
-        return MedicineStorageService.getStoredMedicines(userId);
-    }
-
-    // Check if cache exists
-    async hasCachedData(userId: string): Promise<boolean> {
-        const medicines = await MedicineStorageService.getStoredMedicines(userId);
-        return medicines.length > 0;
-    }
-
-    // Get last sync time
-    async getLastSyncTime(): Promise<Date | null> {
-        return MedicineStorageService.getLastSync();
     }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl, Modal, Alert, StyleSheet, Pressable } from 'react-native';
-import { Search, Plus, Pill, Clock, MoreVertical, AlertTriangle, Edit3, Trash2, Pause, Play, X } from 'lucide-react-native';
+import { Search, Plus, Pill, Clock, MoreVertical, Edit3, Trash2, Pause, Play, X } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -218,7 +218,7 @@ const MedicineItem: React.FC<{
             [MedicineForm.TABLET]: 'pill',
             [MedicineForm.INJECTION]: 'injection',
             [MedicineForm.LIQUID]: 'liquid',
-            [MedicineForm.DROPS]: 'liquid',
+            [MedicineForm.DROP]: 'drop',
             [MedicineForm.INHALER]: 'inhaler',
             [MedicineForm.POWDER]: 'powder',
             [MedicineForm.PATCH]: 'patch',

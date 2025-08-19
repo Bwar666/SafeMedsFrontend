@@ -1,4 +1,3 @@
-// AiWarningTypes.ts
 export interface AiEvaluationResponse {
     id: string;
     medicineName: string;

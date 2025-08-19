@@ -40,11 +40,6 @@ export class MedicalSearchStorageService {
         }
     }
 
-    static async clearRecentSearches(category: SearchCategory): Promise<void> {
-        const key = `${this.KEYS.RECENT_SEARCHES}_${category}`;
-        await AsyncStorage.removeItem(key);
-    }
-
     // Search results caching
     static async cacheSearchResults(category: SearchCategory, query: string, results: SearchResponse): Promise<void> {
         try {
@@ -96,15 +91,6 @@ export class MedicalSearchStorageService {
         }
     }
 
-    // Popular suggestions management
-    static async storePopularSuggestions(category: SearchCategory, suggestions: SearchSuggestion[]): Promise<void> {
-        try {
-            const key = `${this.KEYS.POPULAR_SUGGESTIONS}_${category}`;
-            await AsyncStorage.setItem(key, JSON.stringify(suggestions));
-        } catch (error) {
-            console.log('Failed to store popular suggestions:', error);
-        }
-    }
 
     static async getPopularSuggestions(category: SearchCategory): Promise<SearchSuggestion[]> {
         try {
@@ -146,33 +132,6 @@ export class MedicalSearchStorageService {
             return data ? JSON.parse(data) : [];
         } catch {
             return [];
-        }
-    }
-
-    // Clear all search data
-    static async clearAllSearchData(): Promise<void> {
-        const keys = Object.values(this.KEYS);
-        await AsyncStorage.multiRemove(keys);
-    }
-
-    static async clearExpiredCache(): Promise<void> {
-        try {
-            const allCache = await this.getAllCachedResults();
-            const now = Date.now();
-            let hasExpired = false;
-
-            Object.keys(allCache).forEach(key => {
-                if (now - allCache[key].timestamp > this.CACHE_DURATION_MS) {
-                    delete allCache[key];
-                    hasExpired = true;
-                }
-            });
-
-            if (hasExpired) {
-                await AsyncStorage.setItem(this.KEYS.SEARCH_CACHE, JSON.stringify(allCache));
-            }
-        } catch (error) {
-            console.log('Failed to clear expired cache:', error);
         }
     }
 }
