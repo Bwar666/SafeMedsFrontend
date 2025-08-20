@@ -49,7 +49,7 @@ const LoadingScreen: React.FC<{ isDark: boolean }> = ({ isDark }) => (
         <View className="items-center">
             <Image
                 source={require('../../assets/images/playstore.png')}
-                style={{ width: 120, height: 120, marginBottom: 24, borderRadius: 20 }}
+                style={{ width: 300, height: 300, marginBottom: 24}}
                 resizeMode="contain"
             />
             <Text className={`text-2xl font-bold mb-2 ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>

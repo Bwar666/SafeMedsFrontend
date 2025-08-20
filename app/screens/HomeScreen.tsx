@@ -73,6 +73,7 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
 
     useEffect(() => {
         const initNotifications = async () => {
+            await MedicineNotificationService.initialize();
             await MedicineNotificationService.requestPermissions();
             await MedicineNotificationService.enableAutoCheck(userId);
             await MedicineNotificationService.scheduleUpcomingReminders(userId);

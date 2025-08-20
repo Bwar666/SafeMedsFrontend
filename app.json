@@ -12,14 +12,16 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.frontend",
       "infoPlist": {
-        "UIBackgroundModes": ["background-fetch"]
+        "UIBackgroundModes": [
+          "background-fetch"
+        ]
       }
     },
     "android": {
+      "permissions": ["WAKE_LOCK"],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "permissions": ["WAKE_LOCK"]
+        "foregroundImage": "./assets/images/playstore.png",
+        "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.frontend"
@@ -30,11 +32,19 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/splash.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -44,6 +54,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "21e83790-7982-4e52-b368-1a29753b244e"
+      }
     }
   }
 }

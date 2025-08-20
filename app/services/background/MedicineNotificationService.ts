@@ -3,6 +3,7 @@ import { medicineUsageService } from '@/app/services';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundFetch from 'expo-background-fetch';
+import { Audio } from 'expo-av';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -38,8 +39,86 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async () => {
 
 export class MedicineNotificationService {
     private static readonly STORAGE_KEY = 'scheduled_medicine_notifications';
-    private static readonly NOTIFICATION_SOUND = '../../../assets/notification_sound.mp3'
+    private static readonly NOTIFICATION_CATEGORY = 'medicine_reminder_category';
+    private static currentSound: Audio.Sound | null = null;
 
+    static async initialize(): Promise<void> {
+        try {
+            // Set up notification categories with actions
+            await Notifications.setNotificationCategoryAsync(
+                this.NOTIFICATION_CATEGORY,
+                [
+                    {
+                        identifier: 'stop_sound',
+                        buttonTitle: 'Stop Sound',
+                        options: {
+                            isDestructive: false,
+                            isAuthenticationRequired: false,
+                        },
+                    },
+                ]
+            );
+
+            // Listen for notification responses
+            Notifications.addNotificationResponseReceivedListener(this.handleNotificationResponse);
+
+            // Listen for notifications received
+            Notifications.addNotificationReceivedListener(this.handleNotificationReceived);
+        } catch (error) {
+            console.error('Failed to initialize notification service:', error);
+        }
+    }
+
+    private static handleNotificationResponse = async (response: Notifications.NotificationResponse) => {
+        const { actionIdentifier } = response;
+
+        if (actionIdentifier === 'stop_sound') {
+            await this.stopCustomSound();
+        }
+    };
+
+    private static handleNotificationReceived = async (notification: Notifications.Notification) => {
+        if (notification.request.content.data?.type === 'medicine_reminder') {
+            await this.playCustomSound();
+        }
+    };
+
+    private static async playCustomSound(): Promise<void> {
+        try {
+            // Stop any existing sound first to ensure only one instance
+            if (this.currentSound) {
+                await this.currentSound.stopAsync();
+                await this.currentSound.unloadAsync();
+                this.currentSound = null;
+            }
+
+            // Create and play the custom sound
+            const { sound } = await Audio.Sound.createAsync(
+                require('@/assets/notification.mp3'),
+                {
+                    shouldPlay: true,
+                    isLooping: true,
+                    volume: 1.0
+                }
+            );
+
+            this.currentSound = sound;
+        } catch (error) {
+            console.error('Failed to play custom sound:', error);
+        }
+    }
+
+    private static async stopCustomSound(): Promise<void> {
+        try {
+            if (this.currentSound) {
+                await this.currentSound.stopAsync();
+                await this.currentSound.unloadAsync();
+                this.currentSound = null;
+            }
+        } catch (error) {
+            console.error('Failed to stop custom sound:', error);
+        }
+    }
 
     static async requestPermissions(): Promise<boolean> {
         try {
@@ -106,9 +185,10 @@ export class MedicineNotificationService {
 
             return await Notifications.scheduleNotificationAsync({
                 content: {
-                    title: '🧪 Medicine Reminder',
+                    title: 'ðŸ§ª Medicine Reminder',
                     body: fullBody,
-                    sound: this.NOTIFICATION_SOUND,
+                    categoryIdentifier: this.NOTIFICATION_CATEGORY,
+                    sound: false, // Disable system sound, use custom sound
                     data: {
                         type: 'medicine_reminder',
                         intakeEventId: intake.id,
@@ -132,6 +212,7 @@ export class MedicineNotificationService {
         try {
             await Notifications.cancelAllScheduledNotificationsAsync();
             await AsyncStorage.removeItem(this.STORAGE_KEY);
+            await this.stopCustomSound();
         } catch (error) {
         }
     }
@@ -171,6 +252,7 @@ export class MedicineNotificationService {
         try {
             await BackgroundFetch.unregisterTaskAsync(BACKGROUND_NOTIFICATION_TASK);
             await AsyncStorage.removeItem('medicine_user_id');
+            await this.stopCustomSound();
         } catch (error) {
             console.error('Failed to disable auto check:', error);
         }
